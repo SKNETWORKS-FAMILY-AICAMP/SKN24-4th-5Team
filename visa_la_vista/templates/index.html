@@ -1,0 +1,44 @@
+{% extends "layout/base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div id="home-page" class="page active">
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="hero-bg-blob hero-bg-blob-1"></div>
+      <div class="hero-bg-blob hero-bg-blob-2"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+        <span>Powered by Advanced AI</span>
+      </div>
+      <h1 class="hero-title">Conversations that<br>understand you</h1>
+      <p class="hero-description">Experience the next generation of AI chat. Natural, intelligent, and context-aware
+        interactions that feel genuinely human.</p>
+      <div class="hero-buttons">
+        <a href="{% url 'chat' %}" class="btn btn-primary" data-nav="chat">
+          입시 도우미
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+
+        <a href="{% url 'interview' %}" class="btn btn-primary" data-nav="chat">
+          비자 모의 인터뷰
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </a>
+
+        <!-- <a href="#features" class="btn btn-secondary">Learn More</a> -->
+      </div>
+    </div>
+  </section>
+
+</div>
+
+{% endblock %}

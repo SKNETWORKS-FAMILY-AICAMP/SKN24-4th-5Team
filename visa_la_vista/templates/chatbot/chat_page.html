@@ -1,0 +1,183 @@
+{% extends "layout/base.html" %}
+{% load static %}
+
+{% block title %}Chat{% endblock %}
+
+{% block content %}
+
+<div id="chat-page" class="page active">
+
+    {% include "layout/chat_sidebar.html" %}
+
+    <div id="chat-main" class="chat-main">
+        <div class="chat-header">
+            <div class="chat-header-content">
+                <div>
+                    <h2 id="chat-title-display" class="chat-title">New Conversation</h2>
+                    <p class="chat-subtitle">AI Assistant</p>
+                </div>
+                <button class="btn-toggle-input" id="toggle-input-btn">
+                    <span id="input-toggle-text">Hide Input</span>
+                </button>
+            </div>
+        </div>
+        <div id="chat-messages" class="chat-messages"></div>
+        <div id="chat-input-area" class="chat-input-area">
+            <div class="chat-input-container">
+                <form id="chat-form" class="chat-input-form">
+                    <div class="input-wrapper">
+                        <textarea id="message-input" placeholder="Message Chatwise..." rows="1"
+                            class="message-input"></textarea>
+                        <button type="submit" class="btn-send disabled" id="send-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13" />
+                                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- {% endblock %} -->
+
+{% block script %}
+<script>
+    (function () {
+        'use strict';
+
+        let messages = [{
+            id: '1',
+            role: 'assistant',
+            content: 'Hello! I\'m here to help you. What would you like to talk about today?',
+            timestamp: new Date()
+        }];
+
+        let conversations = [
+            { id: '1', title: 'New Conversation', timestamp: new Date() },
+            { id: '2', title: 'Help with React components', timestamp: new Date(Date.now() - 86400000) }
+        ];
+
+        let activeConversation = '1';
+
+        const chatMessagesContainer = document.getElementById('chat-messages');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const conversationsList = document.getElementById('conversations-list');
+        const toggleInputBtn = document.getElementById('toggle-input-btn');
+        const chatInputArea = document.getElementById('chat-input-area');
+        const newChatBtn = document.getElementById('new-chat-btn');
+
+        function initChat() {
+            renderMessages();
+            renderConversations();
+            updateSendButton();
+        }
+
+        function renderMessages() {
+            chatMessagesContainer.innerHTML = '';
+            const container = document.createElement('div');
+            container.className = 'messages-container';
+
+            messages.forEach((msg) => {
+                const messageEl = document.createElement('div');
+                messageEl.className = `message ${msg.role}`;
+                messageEl.innerHTML = `
+                    <div class="message-avatar">${msg.role === 'user' ? 'U' : 'AI'}</div>
+                    <div class="message-content">
+                        <p class="message-text">${msg.content}</p>
+                        <p class="message-time">${msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>`;
+                container.appendChild(messageEl);
+            });
+
+            chatMessagesContainer.appendChild(container);
+            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+        }
+
+        function renderConversations() {
+            conversationsList.innerHTML = '';
+            conversations.forEach(conv => {
+                const btn = document.createElement('button');
+                btn.className = `conversation-btn ${conv.id === activeConversation ? 'active' : ''}`;
+                btn.innerHTML = `<span class="conversation-title">${conv.title}</span>`;
+                btn.onclick = () => {
+                    activeConversation = conv.id;
+                    document.getElementById('chat-title-display').innerText = conv.title;
+                    renderConversations();
+                };
+                conversationsList.appendChild(btn);
+            });
+        }
+
+        function sendMessage(content) {
+            if (!content.trim()) return;
+
+            messages.push({
+                id: Date.now().toString(),
+                role: 'user',
+                content: content,
+                timestamp: new Date()
+            });
+            renderMessages();
+            messageInput.value = '';
+            updateSendButton();
+
+            setTimeout(() => {
+                messages.push({
+                    id: Date.now().toString(),
+                    role: 'assistant',
+                    content: "This is a response. I've received your message.",
+                    timestamp: new Date()
+                });
+                renderMessages();
+            }, 1000);
+        }
+
+        function updateSendButton() {
+            const hasText = messageInput.value.trim().length > 0;
+            sendBtn.classList.toggle('disabled', !hasText);
+            sendBtn.disabled = !hasText;
+        }
+
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            sendMessage(messageInput.value);
+        });
+
+        messageInput.addEventListener('input', updateSendButton);
+
+        toggleInputBtn.addEventListener('click', () => {
+            chatInputArea.classList.toggle('hidden');
+            document.getElementById('input-toggle-text').innerText =
+                chatInputArea.classList.contains('hidden') ? 'Show Input' : 'Hide Input';
+        });
+
+        newChatBtn.addEventListener('click', () => {
+            messages = [{ id: '1', role: 'assistant', content: 'New session started.', timestamp: new Date() }];
+            document.getElementById('chat-title-display').innerText = "New Conversation";
+            renderMessages();
+        });
+
+        initChat();
+    })();
+
+
+
+
+
+
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebar = document.getElementById('chat-sidebar');
+        const chatPage = document.getElementById('chat-page');
+
+        if (chatPage) chatPage.style.display = 'flex';
+        if (sidebar) sidebar.style.display = 'flex';
+    });
+</script>
+{% endblock %}
