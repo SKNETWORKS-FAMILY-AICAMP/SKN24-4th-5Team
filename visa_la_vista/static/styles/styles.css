@@ -1,0 +1,379 @@
+:root {
+    --surface: #ffffff;
+    --text: #111217;
+    --muted: #73798b;
+    --soft: #f0f0f0;
+    --line: #eef0f4;
+    --primary: #424595;
+    --primary-start: #7a99ef;
+    --primary-end: #3d4fc7;
+    --danger: #ff174d;
+    --shadow: 0 16px 24px rgba(31, 40, 58, 0.16);
+    font-family:
+        "DM Sans",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    color: var(--text);
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button {
+    font: inherit;
+}
+
+.site-header {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    background: var(--surface);
+}
+
+.site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: min(100%, 1200px);
+    min-height: 72px;
+    margin: 0 auto;
+    padding: 0 16px;
+    gap: 32px;
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    min-width: max-content;
+    gap: 10px;
+}
+
+.brand__mark {
+    width: 39px;
+    height: 39px;
+    display: block;
+    object-fit: contain;
+}
+
+.brand__name {
+    color: #050506;
+    font-family: "Francois One", "DM Sans", sans-serif;
+    font-size: 29px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0;
+}
+
+.site-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    gap: 34px;
+    min-width: 0;
+}
+
+.site-nav__link {
+    color: #111217;
+    font-size: 16px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.site-nav__link:hover,
+.site-nav__link:focus-visible {
+    color: var(--primary);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin-left: 4px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 39px;
+    padding: 0 19px;
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+        transform 160ms ease,
+        background-color 160ms ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn--ghost {
+    background: var(--soft);
+    color: #18191f;
+}
+
+.btn--primary {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+.profile-menu {
+    position: relative;
+}
+
+.profile-menu__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 68px;
+    min-height: 40px;
+    padding: 0 12px;
+    color: #ffffff;
+    background: var(--primary);
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.profile-menu__button svg {
+    width: 17px;
+    height: 17px;
+}
+
+.profile-menu__initial {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.profile-menu__chevron {
+    transition: transform 160ms ease;
+}
+
+.profile-menu.is-open .profile-menu__chevron {
+    transform: rotate(180deg);
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + 18px);
+    right: 0;
+    width: 222px;
+    overflow: hidden;
+    background: var(--surface);
+    border-radius: 11px;
+    box-shadow: var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition:
+        opacity 160ms ease,
+        transform 160ms ease;
+}
+
+.profile-menu.is-open .profile-dropdown {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.profile-dropdown__account {
+    padding: 19px 16px 18px;
+}
+
+.profile-dropdown__name {
+    margin: 0 0 6px;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.profile-dropdown__email {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.profile-dropdown__list {
+    margin: 0;
+    padding: 8px 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+}
+
+.profile-dropdown__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 16px;
+    color: #252733;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.profile-dropdown__item:hover {
+    background: #f8f9fb;
+}
+
+.profile-dropdown__item svg {
+    width: 16px;
+    height: 16px;
+    color: #676d82;
+}
+
+.profile-dropdown__item--danger {
+    color: var(--danger);
+}
+
+.profile-dropdown__item--danger svg {
+    color: var(--danger);
+}
+
+.site-footer {
+    width: 100%;
+    background: var(--surface);
+}
+
+.site-footer__inner {
+    width: min(100%, 1200px);
+    min-height: 328px;
+    margin: 0 auto;
+    padding: 46px 16px 48px;
+}
+
+.site-footer__top {
+    display: flex;
+    justify-content: space-between;
+    gap: 48px;
+    padding-bottom: 12px;
+}
+
+.site-footer .brand__mark {
+    width: 37px;
+    height: 37px;
+    border-radius: 14px;
+}
+
+.site-footer .brand__name {
+    font-size: 22px;
+    font-weight: 500;
+}
+
+.site-footer__info {
+    margin-top: 18px;
+    color: #536b92;
+    font-size: 12px;
+    line-height: 2;
+}
+
+.site-footer__address {
+    margin-top: 28px;
+}
+
+.footer-nav {
+    display: flex;
+    align-items: flex-start;
+    gap: 26px;
+    padding-top: 8px;
+    white-space: nowrap;
+}
+
+.footer-nav a {
+    color: #111217;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.footer-nav a:hover,
+.footer-nav a:focus-visible {
+    color: var(--primary);
+}
+
+.site-footer__bottom {
+    margin-top: 8px;
+    padding-top: 33px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 16px;
+    text-align: center;
+}
+
+@media (max-width: 900px) {
+    .component-preview {
+        padding-inline: 16px;
+    }
+
+    .site-header__inner {
+        flex-wrap: wrap;
+        min-height: auto;
+        padding-block: 18px;
+        gap: 18px;
+    }
+
+    .site-nav {
+        order: 3;
+        flex-basis: 100%;
+        justify-content: flex-start;
+        gap: 18px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .header-actions {
+        gap: 10px;
+    }
+}
+
+@media (max-width: 640px) {
+    .brand__name {
+        font-size: 23px;
+    }
+
+    .brand__mark {
+        width: 35px;
+        height: 35px;
+        border-radius: 13px;
+    }
+
+    .btn {
+        min-height: 36px;
+        padding: 0 14px;
+        font-size: 14px;
+    }
+
+    .site-footer__inner {
+        padding: 34px 18px 38px;
+    }
+
+    .site-footer__top {
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .footer-nav {
+        flex-wrap: wrap;
+        gap: 14px 22px;
+    }
+
+    .site-footer__bottom {
+        font-size: 14px;
+    }
+}
