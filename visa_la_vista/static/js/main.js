@@ -464,7 +464,7 @@
         const newPasswordConfirmError = document.getElementById("accountNewPasswordConfirmError");
 
         function isValidPassword(value) {
-            return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,16}$/.test(value);
+            return /^(?=.*[A-Za-z])(?=.*\d).{8,16}$/.test(value);
         }
 
         function setError(element, message) {
@@ -546,7 +546,7 @@
         }
 
         function isValidPassword(value) {
-            return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,16}$/.test(value);
+            return /^(?=.*[A-Za-z])(?=.*\d).{8,16}$/.test(value);
         }
 
         function sendResetVerificationCode() {
@@ -644,5 +644,5 @@
         });
     });
 
-    console.log("Chatwise initialized successfully!");
+    console.log("Visa la Vista initialized successfully!");
 })();
