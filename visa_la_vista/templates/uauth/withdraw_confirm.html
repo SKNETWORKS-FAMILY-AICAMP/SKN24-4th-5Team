@@ -1,0 +1,27 @@
+{% extends "layout/base.html" %}
+{% load static %}
+
+{% block title %}회원 탈퇴{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/account_pages.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="account-page">
+    <section class="account-workspace" aria-labelledby="withdrawConfirmTitle">
+        <form class="account-card account-card--compact" method="post" action="{% url 'uauth:withdraw_confirm' %}">
+            {% csrf_token %}
+            <h1 class="account-title" id="withdrawConfirmTitle">회원 탈퇴</h1>
+
+            <p class="account-danger-text">탈퇴하면 저장된 모든 정보가 삭제됩니다.</p>
+            <p class="account-danger-text">정말로 탈퇴하시겠습니까?</p>
+
+            <div class="account-actions">
+                <button class="account-button" type="submit">확인</button>
+                <a class="account-button" href="{% url 'index' %}">취소</a>
+            </div>
+        </form>
+    </section>
+</main>
+{% endblock %}

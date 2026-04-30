@@ -1,3 +1,133 @@
 from django.db import models
+from django.conf import settings
 
-# Create your models here.
+
+class AdmissionChatConversation(models.Model):
+    title = models.CharField(max_length=120)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='admission_chat_conversations',
+    )
+    group_label = models.CharField(max_length=20, default='오늘')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at', '-id']
+
+    def __str__(self):
+        return self.title
+
+
+class AdmissionChatMessage(models.Model):
+    ROLE_USER = 'user'
+    ROLE_ASSISTANT = 'assistant'
+    ROLE_CHOICES = (
+        (ROLE_USER, 'User'),
+        (ROLE_ASSISTANT, 'Assistant'),
+    )
+
+    conversation = models.ForeignKey(
+        AdmissionChatConversation,
+        on_delete=models.CASCADE,
+        related_name='messages',
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at', 'id']
+
+    def __str__(self):
+        return f'{self.conversation.title} - {self.role}'
+
+
+class VisaInterviewModeDescription(models.Model):
+    MODE_PRACTICE = 'practice'
+    MODE_REAL = 'real'
+    MODE_CHOICES = (
+        (MODE_PRACTICE, '연습 모드'),
+        (MODE_REAL, '실전 모드'),
+    )
+
+    mode = models.CharField(max_length=20, choices=MODE_CHOICES, unique=True)
+    title = models.CharField(max_length=80)
+    description = models.TextField()
+
+    class Meta:
+        ordering = ['mode']
+
+    def __str__(self):
+        return self.title
+
+
+class VisaInterviewQuestion(models.Model):
+    mode = models.CharField(max_length=20, choices=VisaInterviewModeDescription.MODE_CHOICES)
+    question_text = models.TextField()
+    order = models.PositiveIntegerField(default=1)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['mode', 'order', 'id']
+
+    def __str__(self):
+        return self.question_text[:60]
+
+
+class VisaInterviewSession(models.Model):
+    STATUS_READY = 'ready'
+    STATUS_IN_PROGRESS = 'in_progress'
+    STATUS_DONE = 'done'
+    STATUS_CHOICES = (
+        (STATUS_READY, 'Ready'),
+        (STATUS_IN_PROGRESS, 'In Progress'),
+        (STATUS_DONE, 'Done'),
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='visa_interview_sessions',
+    )
+    mode = models.CharField(max_length=20, choices=VisaInterviewModeDescription.MODE_CHOICES)
+    uploaded_file_name = models.CharField(max_length=255, blank=True)
+    question_count = models.PositiveIntegerField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_READY)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at', '-id']
+
+    def __str__(self):
+        return f'{self.get_mode_display()} - {self.status}'
+
+
+class VisaInterviewAnswer(models.Model):
+    session = models.ForeignKey(
+        VisaInterviewSession,
+        on_delete=models.CASCADE,
+        related_name='answers',
+    )
+    question = models.ForeignKey(
+        VisaInterviewQuestion,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='answers',
+    )
+    transcript = models.TextField(blank=True)
+    audio_label = models.CharField(max_length=120, blank=True)
+    answered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['answered_at', 'id']
+
+    def __str__(self):
+        return self.transcript[:60] or self.audio_label or 'Interview answer'

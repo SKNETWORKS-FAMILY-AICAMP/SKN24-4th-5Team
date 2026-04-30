@@ -15,6 +15,8 @@ from pathlib import Path
 # for mysql migration 
 import pymysql
 pymysql.install_as_MySQLdb()
+pymysql.version_info = (2, 2, 1, "final", 0)
+pymysql.__version__ = "2.2.1"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

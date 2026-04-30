@@ -1,0 +1,29 @@
+{% extends "layout/base.html" %}
+{% load static %}
+
+{% block title %}본인 확인{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'styles/account_pages.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="account-page">
+    <section class="account-workspace" aria-labelledby="withdrawVerifyTitle">
+        <form class="account-card account-card--compact" method="post" action="{% url 'uauth:withdraw_verify' %}">
+            {% csrf_token %}
+            <h1 class="account-title" id="withdrawVerifyTitle">본인 확인</h1>
+
+            <div class="account-field">
+                <input class="account-input" type="password" name="password" autocomplete="current-password" placeholder="비밀번호를 입력하세요." aria-describedby="withdrawPasswordError">
+                <p class="account-error" id="withdrawPasswordError">{{ errors.password }}</p>
+            </div>
+
+            <div class="account-actions">
+                <button class="account-button" type="submit">확인</button>
+                <a class="account-button" href="{% url 'index' %}">취소</a>
+            </div>
+        </form>
+    </section>
+</main>
+{% endblock %}

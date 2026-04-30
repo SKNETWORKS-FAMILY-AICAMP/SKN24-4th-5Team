@@ -1,0 +1,34 @@
+
+{% if not user.is_authenticated %}
+  <div class="custom-modal-backdrop" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle" hidden>
+    <div class="custom-modal login-modal" role="document">
+      <button class="custom-modal-close" type="button" aria-label="로그인 창 닫기" data-modal-close>
+        &times;
+      </button>
+
+      <div class="login-modal__header">
+        <h2 class="login-modal__title" id="loginModalTitle">로그인</h2>
+      </div>
+
+      <form class="login-modal__form" method="post" action="{% url 'uauth:login' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+        <div class="login-modal__field">
+          <input type="text" class="form-control" name="username" id="modal-username" autocomplete="username" required placeholder="이메일">
+        </div>
+
+        <div class="login-modal__field">
+          <input type="password" class="form-control" name="password" id="modal-password" autocomplete="current-password" required placeholder="비밀번호">
+        </div>
+
+        <button type="submit" class="btn btn--primary login-modal__submit">로그인</button>
+      </form>
+
+      <p class="login-modal__signup">
+        <button type="button" data-modal-open="passwordResetModal">비밀번호 찾기</button>
+        <button type="button" data-modal-open="signupModal">회원가입</button>
+      </p>
+    </div>
+  </div>
+{% endif %}

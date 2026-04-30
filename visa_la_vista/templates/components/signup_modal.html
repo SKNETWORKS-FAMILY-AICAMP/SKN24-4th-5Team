@@ -1,0 +1,88 @@
+{% if not user.is_authenticated %}
+  <div class="custom-modal-backdrop" id="signupModal" role="dialog" aria-modal="true" aria-labelledby="signupModalTitle" hidden>
+    <div class="custom-modal auth-modal signup-modal" role="document">
+      <button class="custom-modal-close" type="button" aria-label="회원가입 창 닫기" data-modal-close>
+        &times;
+      </button>
+
+      <div class="login-modal__header">
+        <h2 class="login-modal__title" id="signupModalTitle">회원가입</h2>
+      </div>
+
+      <form class="login-modal__form" name="modalUserCreateFrm" method="post" action="{% url 'uauth:signup' %}" enctype="multipart/form-data" data-signup-form novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="username" data-signup-username>
+        <div class="login-modal__field">
+          <div class="login-modal__btns">
+            <input type="email" class="form-control" name="email" id="modal-signup-email" autocomplete="email" required placeholder="이메일" data-signup-email>
+            <button type="button" class="btn btn--secondary" id="check-duplicate-btn" data-check-duplicate-btn>중복 확인</button>
+          </div>
+          <p class="feedback" data-signup-email-feedback></p>
+        </div>
+        <div class="login-modal__field">
+          <div class="login-modal__btns">
+            <div class="verification-input">
+              <input type="text" class="form-control verification-input__control" name="verify" id="modal-verify" autocomplete="one-time-code" required placeholder="인증번호" data-signup-verification>
+              <span class="verification-input__timer" data-verification-timer aria-live="polite"></span>
+            </div>  
+            <button type="button" class="btn btn--secondary" id="send-verification-btn" data-send-verification-btn>전송</button>
+            <button type="button" class="btn btn--secondary" id="check-verification-btn" data-check-verification-btn>인증 확인</button>
+          </div>  
+          <p class="feedback" data-signup-verification-feedback></p>
+        </div>
+        <div class="login-modal__field">
+          <input type="password" class="form-control" name="password1" id="modal-password1" autocomplete="new-password" required placeholder="비밀번호 (8~16자, 영어 대소문자, 숫자, 특수문자)" data-signup-password>
+          <p class="feedback" data-signup-password-feedback></p>
+        </div>
+
+        <div class="login-modal__field">
+          <input type="password" class="form-control" name="password2" id="modal-password2" autocomplete="new-password" required placeholder="비밀번호 확인" data-signup-password-confirm>
+          <p class="feedback" data-signup-password-confirm-feedback></p>
+        </div>
+        <div class="login-modal__terms">
+          <div class="login-modal__term-row login-modal__term-row--all">
+            <input type="checkbox" name="agree_terms" id="agree-terms" data-agree-all>
+            <label for="agree-terms">모두 동의</label>
+          </div>
+          <hr>
+          <div class="login-modal__term-row">
+            <input type="checkbox" name="agree_terms1" id="agree-terms1" required data-agree-item>
+            <label for="agree-terms1">[필수] 이용약관 동의</label>
+            <button type="button" class="login-modal__term-detail" data-modal-open="signupTermsModal">내용 보기</button>
+          </div>
+          <div class="login-modal__term-row">
+            <input type="checkbox" name="agree_terms2" id="agree-terms2" required data-agree-item>
+            <label for="agree-terms2">[필수] 개인정보수집 동의</label>
+            <button type="button" class="login-modal__term-detail" data-modal-open="signupPrivacyCollectionModal">내용 보기</button>
+          </div>
+          <p class="feedback" data-signup-agreement-feedback></p>
+        </div>
+        <button type="submit" class="btn btn--primary login-modal__submit">가입하기</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="custom-modal-backdrop signup-detail-modal-backdrop" id="signupTermsModal" role="dialog" aria-modal="true" aria-labelledby="signupTermsModalTitle" hidden data-stacked-modal>
+    <div class="custom-modal footer-modal" role="document">
+      <button class="custom-modal-close" type="button" aria-label="이용약관 내용 닫기" data-modal-close>
+        &times;
+      </button>
+      <h2 class="footer-modal__title" id="signupTermsModalTitle">이용약관</h2>
+      <p class="footer-modal__text">
+        Visa La Vista 서비스 이용을 위한 필수 약관입니다. 회원은 서비스 이용 과정에서 관계 법령과 서비스 운영 기준을 준수해야 하며, 부정 이용이나 타인의 권리 침해 행위는 제한될 수 있습니다.
+      </p>
+    </div>
+  </div>
+
+  <div class="custom-modal-backdrop signup-detail-modal-backdrop" id="signupPrivacyCollectionModal" role="dialog" aria-modal="true" aria-labelledby="signupPrivacyCollectionModalTitle" hidden data-stacked-modal>
+    <div class="custom-modal footer-modal" role="document">
+      <button class="custom-modal-close" type="button" aria-label="개인정보수집 내용 닫기" data-modal-close>
+        &times;
+      </button>
+      <h2 class="footer-modal__title" id="signupPrivacyCollectionModalTitle">개인정보수집 동의</h2>
+      <p class="footer-modal__text">
+        회원가입과 서비스 제공을 위해 이메일, 비밀번호 등 필요한 개인정보를 수집합니다. 수집된 정보는 계정 관리, 본인 확인, 서비스 안내 및 보안 목적으로 사용됩니다.
+      </p>
+    </div>
+  </div>
+{% endif %}

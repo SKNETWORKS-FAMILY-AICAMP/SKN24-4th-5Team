@@ -12,6 +12,7 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,300&family=DM+Sans:wght@400;500;600&display=swap"
       rel="stylesheet">
+    {% block extra_css %}{% endblock %}
   </head>
 
   <body>
@@ -24,13 +25,16 @@
     </main>
 
     {% include "components/footer.html" %}
+    {% include "components/login_modal.html" %}
+    {% include "components/signup_modal.html" %}
+    {% include "components/password_reset_modal.html" %}
 
     <!-- <script src="/visa_la_vista/static/js/navigation.js"></script>
     <script src="/visa_la_vista/static/js/global.js"></script> -->
     <!-- <script src="{% static 'js/navigation.js' %}"></script> don't move to /chat-->
-    <script src="{% static 'js/chat.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    {% block extra_js %}{% endblock %}
   </body>
 
 </html>

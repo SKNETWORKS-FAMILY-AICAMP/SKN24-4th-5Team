@@ -41,6 +41,10 @@
   // Add click event listeners to navigation links
   navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
+      if (link.hasAttribute('data-login-required')) {
+        return;
+      }
+
       e.preventDefault();
       const page = link.getAttribute('data-nav');
       navigateTo(page);
