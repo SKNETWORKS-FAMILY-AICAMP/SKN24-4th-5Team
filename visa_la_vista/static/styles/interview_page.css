@@ -191,9 +191,10 @@
 .mode-select-grid {
     min-height: 500px;
     display: grid;
-    grid-template-columns: minmax(280px, 420px);
+    grid-template-columns: repeat(2, minmax(260px, 420px));
     align-items: center;
     justify-content: center;
+    gap: 28px;
 }
 
 .upload-card,
@@ -320,6 +321,21 @@
 .mode-description-card {
     min-height: 250px;
     padding: 42px 34px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition:
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        border-color 180ms ease;
+}
+
+.mode-description-card:hover,
+.mode-description-card:focus-visible,
+.mode-description-card.is-highlighted {
+    border-color: rgba(31, 53, 209, 0.35);
+    box-shadow: 0 16px 28px rgba(26, 31, 113, 0.2);
+    transform: translateY(-4px);
+    outline: none;
 }
 
 .mode-description-card h3 {
