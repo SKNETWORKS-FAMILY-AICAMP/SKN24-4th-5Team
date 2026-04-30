@@ -10,16 +10,17 @@
         <h2 class="login-modal__title" id="loginModalTitle">로그인</h2>
       </div>
 
-      <form class="login-modal__form" method="post" action="{% url 'uauth:login' %}">
+      <form class="login-modal__form" method="post" action="{% url 'uauth:login' %}" data-login-form novalidate>
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.get_full_path }}">
 
         <div class="login-modal__field">
-          <input type="text" class="form-control" name="username" id="modal-username" autocomplete="username" required placeholder="이메일">
+          <input type="text" class="form-control" name="username" id="modal-username" autocomplete="username" required placeholder="이메일" data-login-username>
         </div>
 
         <div class="login-modal__field">
-          <input type="password" class="form-control" name="password" id="modal-password" autocomplete="current-password" required placeholder="비밀번호">
+          <input type="password" class="form-control" name="password" id="modal-password" autocomplete="current-password" required placeholder="비밀번호" data-login-password>
+          <p class="feedback" data-login-feedback></p>
         </div>
 
         <button type="submit" class="btn btn--primary login-modal__submit">로그인</button>
