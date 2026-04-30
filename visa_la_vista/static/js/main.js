@@ -221,6 +221,9 @@
                     window.clearInterval(verificationTimerInterval);
                     verificationTimer.textContent = "만료";
                     verificationTimer.classList.add("is-expired");
+                    isVerificationChecked = false;
+                    dummyVerificationCode = "";
+                    verificationExpiresAt = 0;
                     return;
                 }
 
@@ -231,6 +234,10 @@
         function stopVerificationTimers() {
             window.clearInterval(resendCooldownInterval);
             window.clearInterval(verificationTimerInterval);
+            isVerificationSent = false;
+            isVerificationChecked = false;
+            dummyVerificationCode = "";
+            verificationExpiresAt = 0;
 
             if (sendVerificationButton) {
                 sendVerificationButton.disabled = false;
@@ -286,6 +293,8 @@
         let isEmailChecked = false;
         let isVerificationSent = false;
         let isVerificationChecked = false;
+        let dummyVerificationCode = "";
+        let verificationExpiresAt = 0;
 
         function setFeedback(element, message, type = "error") {
             if (!element) return;
@@ -299,8 +308,27 @@
         }
 
         function isValidPassword(value) {
-            return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,16}$/.test(value);
+            return /^(?=.*[A-Za-z])(?=.*\d).{8,16}$/.test(value);
         }
+
+        function createDummyVerificationCode() {
+            return String(Math.floor(100000 + Math.random() * 900000));
+        }
+
+        emailInput?.addEventListener("input", () => {
+            isEmailChecked = false;
+            isVerificationSent = false;
+            isVerificationChecked = false;
+            dummyVerificationCode = "";
+            verificationExpiresAt = 0;
+
+            if (duplicateButton) {
+                duplicateButton.disabled = false;
+            }
+
+            setFeedback(emailFeedback, "");
+            setFeedback(verificationFeedback, "");
+        });
 
         duplicateButton?.addEventListener("click", () => {
             const email = emailInput.value.trim();
@@ -312,6 +340,7 @@
             }
 
             isEmailChecked = true;
+            duplicateButton.disabled = true;
             setFeedback(emailFeedback, "사용 가능한 이메일입니다", "success");
         });
 
@@ -324,19 +353,45 @@
 
                 isVerificationSent = true;
                 isVerificationChecked = false;
+                dummyVerificationCode = createDummyVerificationCode();
+                verificationExpiresAt = Date.now() + 5 * 60 * 1000;
                 startResendCooldown();
                 startVerificationTimer();
-                alert("인증번호를 이메일로 발송했습니다. 이메일을 확인해 주세요.\n메일이 보이지 않을 경우 스팸함도 확인해 주세요.");
+                setFeedback(verificationFeedback, "개발용 인증번호가 생성되었습니다.", "success");
+                alert(`개발용 더미 인증번호: ${dummyVerificationCode}`);
             });
         }
 
         verificationCheckButton?.addEventListener("click", () => {
-            if (!verificationInput.value.trim()) {
+            const inputCode = verificationInput.value.trim();
+
+            if (!isVerificationSent || !dummyVerificationCode) {
+                setFeedback(verificationFeedback, "인증번호를 먼저 전송해주세요.");
+                return;
+            }
+
+            if (Date.now() > verificationExpiresAt) {
+                isVerificationChecked = false;
+                dummyVerificationCode = "";
+                setFeedback(verificationFeedback, "인증번호가 만료되었습니다. 다시 전송해주세요.");
+                return;
+            }
+
+            if (!inputCode) {
                 setFeedback(verificationFeedback, "인증번호 입력해주세요");
                 return;
             }
 
+            if (inputCode !== dummyVerificationCode) {
+                isVerificationChecked = false;
+                setFeedback(verificationFeedback, "인증번호가 일치하지 않습니다.");
+                return;
+            }
+
             isVerificationChecked = true;
+            window.clearInterval(verificationTimerInterval);
+            verificationTimer.textContent = "";
+            verificationTimer.classList.remove("is-expired");
             setFeedback(verificationFeedback, "인증번호 확인 성공", "success");
         });
 

@@ -15,3 +15,9 @@ class UserForm(UserCreationForm):
     class Meta:
         model = User
         fields= ['username', 'password1', 'password2', 'email']
+        
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError('이미 사용중인 이메일입니다.')
+        return email
