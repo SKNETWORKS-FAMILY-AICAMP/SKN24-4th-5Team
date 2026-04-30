@@ -35,7 +35,7 @@
 
 body {
     font-family: "DM Sans", sans-serif;
-    background-color: var(--background);
+    background-color: rgba(150, 166, 217, 0.15);
     color: var(--foreground);
     line-height: 1.6;
     overflow-x: hidden;
@@ -71,7 +71,8 @@ button {
     top: 0;
     z-index: 100;
     border-bottom: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 0);
+    position: absolute;
     backdrop-filter: blur(12px);
 }
 
@@ -79,7 +80,6 @@ button {
     position: relative;
     z-index: 10;
     width: 100%;
-    background: var(--surface);
 }
 
 .site-header__inner {
@@ -314,6 +314,7 @@ button {
     position: relative;
     overflow: hidden;
     padding: 6rem 1.5rem 8rem;
+    height: 100%;
 }
 
 .hero-bg {
@@ -321,7 +322,6 @@ button {
     inset: 0;
     z-index: -1;
     overflow: hidden;
-    background-color: rgba(150, 166, 217, 0.15);
 }
 
 .hero-bg-blob {
@@ -396,7 +396,7 @@ button {
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 3rem;
+    gap: 4rem;
 }
 
 .btn {
@@ -591,7 +591,6 @@ button {
 /* Footer */
 #footer {
     border-top: 1px solid var(--border);
-    background: rgba(236, 236, 240, 0.2);
 }
 
 .footer-container {
@@ -671,7 +670,7 @@ button {
 
 .site-footer {
     width: 100%;
-    background: var(--surface);
+    background-color: rgba(150, 166, 217, 0);
 }
 
 .site-footer__inner {
@@ -1493,10 +1492,11 @@ body.modal-open {
 }
 
 .footer-modal__title {
-    margin: 0 2rem 0.85rem 0;
+    margin: 0 0 2.85rem 0;
     color: var(--foreground);
     font-size: 1.35rem;
     line-height: 1.25;
+    text-align: center;
 }
 
 .footer-modal__text {
