@@ -15,7 +15,7 @@
         <div class="login-modal__field">
           <div class="login-modal__btns">
             <input type="email" class="form-control" name="email" id="modal-signup-email" autocomplete="email" required placeholder="이메일" data-signup-email>
-            <button type="button" class="btn btn--secondary" id="check-duplicate-btn" data-check-duplicate-btn>중복 확인</button>
+            <button type="button" class="btn btn--secondary" id="check-duplicate-btn" data-check-duplicate-btn data-check-email-url="{% url 'uauth:check_email' %}">중복 확인</button>
           </div>
           <p class="feedback" data-signup-email-feedback></p>
         </div>

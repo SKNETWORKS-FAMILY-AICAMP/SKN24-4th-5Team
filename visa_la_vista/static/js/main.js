@@ -173,65 +173,139 @@
         }
     });
 
-    document.querySelectorAll("[data-signup-form]").forEach((form) => {
-        const sendVerificationButton = form.querySelector("[data-send-verification-btn]");
-        const verificationTimer = form.querySelector("[data-verification-timer]");
-        let resendCooldownInterval = null;
-        let verificationTimerInterval = null;
+    function setFeedback(element, message, type = "error") {
+        if (!element) return;
+        element.textContent = message;
+        element.classList.remove("success", "error");
+        if (message) element.classList.add(type);
+    }
 
-        function formatVerificationTime(totalSeconds) {
-            const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
-            const seconds = String(totalSeconds % 60).padStart(2, "0");
+    function formatVerificationTime(totalSeconds) {
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+        const seconds = String(totalSeconds % 60).padStart(2, "0");
 
-            return `${minutes}:${seconds}`;
+        return `${minutes}:${seconds}`;
+    }
+
+    function createDummyVerificationCode() {
+        return String(Math.floor(100000 + Math.random() * 900000));
+    }
+
+    function getCsrfToken() {
+        const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (csrfInput) {
+            return csrfInput.value;
         }
 
-        function startResendCooldown() {
+        const cookie = document.cookie.split("; ").find((row) => row.startsWith("csrftoken="));
+
+        return cookie ? decodeURIComponent(cookie.split("=")[1]) : "";
+    }
+
+    function createDummyVerificationController(options) {
+        const sendButtons = options.sendButtons.filter(Boolean);
+        let resendCooldownInterval = null;
+        let verificationTimerInterval = null;
+        let isVerificationSent = false;
+        let isVerificationChecked = false;
+        let dummyVerificationCode = "";
+        let verificationExpiresAt = 0;
+
+        function startResendCooldown(button) {
             let remainingSeconds = 30;
 
             window.clearInterval(resendCooldownInterval);
-            sendVerificationButton.disabled = true;
-            sendVerificationButton.textContent = `재전송`;
+            button.disabled = true;
+            button.textContent = "재전송";
 
             resendCooldownInterval = window.setInterval(() => {
                 remainingSeconds -= 1;
 
                 if (remainingSeconds <= 0) {
                     window.clearInterval(resendCooldownInterval);
-                    sendVerificationButton.disabled = false;
-                    sendVerificationButton.textContent = "재전송";
-                    return;
+                    button.disabled = false;
+                    button.textContent = "재전송";
                 }
-
-                sendVerificationButton.textContent = `재전송`;
             }, 1000);
+        }
+
+        function expireVerification() {
+            isVerificationChecked = false;
+            dummyVerificationCode = "";
+            verificationExpiresAt = 0;
         }
 
         function startVerificationTimer() {
             let remainingSeconds = 5 * 60;
 
             window.clearInterval(verificationTimerInterval);
-            verificationTimer.textContent = formatVerificationTime(remainingSeconds);
-            verificationTimer.classList.remove("is-expired");
+            options.timer.textContent = formatVerificationTime(remainingSeconds);
+            options.timer.classList.remove("is-expired");
 
             verificationTimerInterval = window.setInterval(() => {
                 remainingSeconds -= 1;
 
                 if (remainingSeconds <= 0) {
                     window.clearInterval(verificationTimerInterval);
-                    verificationTimer.textContent = "만료";
-                    verificationTimer.classList.add("is-expired");
-                    isVerificationChecked = false;
-                    dummyVerificationCode = "";
-                    verificationExpiresAt = 0;
+                    options.timer.textContent = "만료";
+                    options.timer.classList.add("is-expired");
+                    expireVerification();
                     return;
                 }
 
-                verificationTimer.textContent = formatVerificationTime(remainingSeconds);
+                options.timer.textContent = formatVerificationTime(remainingSeconds);
             }, 1000);
         }
 
-        function stopVerificationTimers() {
+        async function send(button) {
+            if (options.beforeSend) {
+                const canSend = await options.beforeSend();
+                if (!canSend) return;
+            }
+
+            isVerificationSent = true;
+            isVerificationChecked = false;
+            dummyVerificationCode = createDummyVerificationCode();
+            verificationExpiresAt = Date.now() + 5 * 60 * 1000;
+            startResendCooldown(button);
+            startVerificationTimer();
+            setFeedback(options.feedback, "개발용 인증번호가 생성되었습니다.", "success");
+            alert(`개발용 더미 인증번호: ${dummyVerificationCode}`);
+        }
+
+        function check() {
+            const inputCode = options.input.value.trim();
+
+            if (!isVerificationSent || !dummyVerificationCode) {
+                setFeedback(options.feedback, "인증번호를 먼저 전송해주세요.");
+                return;
+            }
+
+            if (Date.now() > verificationExpiresAt) {
+                expireVerification();
+                setFeedback(options.feedback, "인증번호가 만료되었습니다. 다시 전송해주세요.");
+                return;
+            }
+
+            if (!inputCode) {
+                setFeedback(options.feedback, "인증번호 입력해주세요");
+                return;
+            }
+
+            if (inputCode !== dummyVerificationCode) {
+                isVerificationChecked = false;
+                setFeedback(options.feedback, "인증번호가 일치하지 않습니다.");
+                return;
+            }
+
+            isVerificationChecked = true;
+            window.clearInterval(verificationTimerInterval);
+            options.timer.textContent = "";
+            options.timer.classList.remove("is-expired");
+            setFeedback(options.feedback, "인증번호 확인 성공", "success");
+        }
+
+        function reset() {
             window.clearInterval(resendCooldownInterval);
             window.clearInterval(verificationTimerInterval);
             isVerificationSent = false;
@@ -239,21 +313,73 @@
             dummyVerificationCode = "";
             verificationExpiresAt = 0;
 
-            if (sendVerificationButton) {
-                sendVerificationButton.disabled = false;
-                sendVerificationButton.textContent = "전송";
-            }
+            sendButtons.forEach((button) => {
+                button.disabled = false;
+                button.textContent = button.dataset.defaultText || button.textContent;
+            });
 
-            if (verificationTimer) {
-                verificationTimer.textContent = "";
-                verificationTimer.classList.remove("is-expired");
-            }
+            options.timer.textContent = "";
+            options.timer.classList.remove("is-expired");
         }
 
-        const signupModal = form.closest(".custom-modal-backdrop");
-        if (signupModal) {
-            signupModal.addEventListener("modal:close", stopVerificationTimers);
-        }
+        sendButtons.forEach((button) => {
+            button.dataset.defaultText = button.textContent;
+            button.addEventListener("click", () => send(button));
+        });
+        options.checkButton?.addEventListener("click", check);
+
+        return {
+            isSent: () => isVerificationSent,
+            isChecked: () => isVerificationChecked,
+            reset,
+        };
+    }
+
+    document.querySelectorAll("[data-login-form]").forEach((form) => {
+        const usernameInput = form.querySelector("[data-login-username]");
+        const passwordInput = form.querySelector("[data-login-password]");
+        const feedback = form.querySelector("[data-login-feedback]");
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            setFeedback(feedback, "");
+
+            if (!usernameInput.value.trim() || !passwordInput.value.trim()) {
+                setFeedback(feedback, "이메일과 비밀번호를 입력해주세요.");
+                return;
+            }
+
+            try {
+                submitButton.disabled = true;
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-CSRFToken": getCsrfToken(),
+                    },
+                    body: new FormData(form),
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    setFeedback(feedback, data.message || "이메일 또는 비밀번호가 일치하지 않습니다.");
+                    return;
+                }
+
+                window.location.href = data.redirect_url || "/";
+            } catch (error) {
+                setFeedback(feedback, "로그인 중 오류가 발생했습니다.");
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+    });
+
+    document.querySelectorAll("[data-signup-form]").forEach((form) => {
+        const sendVerificationButton = form.querySelector("[data-send-verification-btn]");
+        const verificationTimer = form.querySelector("[data-verification-timer]");
 
         const agreeAllCheckbox = form.querySelector("[data-agree-all]");
         const agreeItemCheckboxes = Array.from(form.querySelectorAll("[data-agree-item]"));
@@ -291,17 +417,6 @@
         const passwordConfirmFeedback = form.querySelector("[data-signup-password-confirm-feedback]");
         const agreementFeedback = form.querySelector("[data-signup-agreement-feedback]");
         let isEmailChecked = false;
-        let isVerificationSent = false;
-        let isVerificationChecked = false;
-        let dummyVerificationCode = "";
-        let verificationExpiresAt = 0;
-
-        function setFeedback(element, message, type = "error") {
-            if (!element) return;
-            element.textContent = message;
-            element.classList.remove("success", "error");
-            if (message) element.classList.add(type);
-        }
 
         function isValidEmail(value) {
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -311,16 +426,30 @@
             return /^(?=.*[A-Za-z])(?=.*\d).{8,16}$/.test(value);
         }
 
-        function createDummyVerificationCode() {
-            return String(Math.floor(100000 + Math.random() * 900000));
+        const verificationController = createDummyVerificationController({
+            sendButtons: [sendVerificationButton],
+            checkButton: verificationCheckButton,
+            input: verificationInput,
+            timer: verificationTimer,
+            feedback: verificationFeedback,
+            beforeSend: () => {
+                if (!isEmailChecked) {
+                    alert("이메일 중복 확인 먼저해주세요.");
+                    return false;
+                }
+
+                return true;
+            },
+        });
+
+        const signupModal = form.closest(".custom-modal-backdrop");
+        if (signupModal) {
+            signupModal.addEventListener("modal:close", verificationController.reset);
         }
 
         emailInput?.addEventListener("input", () => {
             isEmailChecked = false;
-            isVerificationSent = false;
-            isVerificationChecked = false;
-            dummyVerificationCode = "";
-            verificationExpiresAt = 0;
+            verificationController.reset();
 
             if (duplicateButton) {
                 duplicateButton.disabled = false;
@@ -330,7 +459,7 @@
             setFeedback(verificationFeedback, "");
         });
 
-        duplicateButton?.addEventListener("click", () => {
+        duplicateButton?.addEventListener("click", async () => {
             const email = emailInput.value.trim();
             isEmailChecked = false;
 
@@ -339,60 +468,21 @@
                 return;
             }
 
-            isEmailChecked = true;
-            duplicateButton.disabled = true;
-            setFeedback(emailFeedback, "사용 가능한 이메일입니다", "success");
-        });
+            try {
+                duplicateButton.disabled = true;
 
-        if (sendVerificationButton && verificationTimer) {
-            sendVerificationButton.addEventListener("click", () => {
-                if (!isEmailChecked) {
-                    alert("이메일 중복 확인 먼저해주세요.");
-                    return;
-                }
+                const response = await fetch(
+                    `${duplicateButton.dataset.checkEmailUrl}?email=${encodeURIComponent(email)}`,
+                );
+                const data = await response.json();
 
-                isVerificationSent = true;
-                isVerificationChecked = false;
-                dummyVerificationCode = createDummyVerificationCode();
-                verificationExpiresAt = Date.now() + 5 * 60 * 1000;
-                startResendCooldown();
-                startVerificationTimer();
-                setFeedback(verificationFeedback, "개발용 인증번호가 생성되었습니다.", "success");
-                alert(`개발용 더미 인증번호: ${dummyVerificationCode}`);
-            });
-        }
-
-        verificationCheckButton?.addEventListener("click", () => {
-            const inputCode = verificationInput.value.trim();
-
-            if (!isVerificationSent || !dummyVerificationCode) {
-                setFeedback(verificationFeedback, "인증번호를 먼저 전송해주세요.");
-                return;
+                isEmailChecked = Boolean(data.available);
+                duplicateButton.disabled = isEmailChecked;
+                setFeedback(emailFeedback, data.message, data.available ? "success" : "error");
+            } catch (error) {
+                duplicateButton.disabled = false;
+                setFeedback(emailFeedback, "이메일 중복 확인 중 오류가 발생했습니다.");
             }
-
-            if (Date.now() > verificationExpiresAt) {
-                isVerificationChecked = false;
-                dummyVerificationCode = "";
-                setFeedback(verificationFeedback, "인증번호가 만료되었습니다. 다시 전송해주세요.");
-                return;
-            }
-
-            if (!inputCode) {
-                setFeedback(verificationFeedback, "인증번호 입력해주세요");
-                return;
-            }
-
-            if (inputCode !== dummyVerificationCode) {
-                isVerificationChecked = false;
-                setFeedback(verificationFeedback, "인증번호가 일치하지 않습니다.");
-                return;
-            }
-
-            isVerificationChecked = true;
-            window.clearInterval(verificationTimerInterval);
-            verificationTimer.textContent = "";
-            verificationTimer.classList.remove("is-expired");
-            setFeedback(verificationFeedback, "인증번호 확인 성공", "success");
         });
 
         passwordInput?.addEventListener("input", () => {
@@ -421,7 +511,7 @@
                 isValid = false;
             }
 
-            if (!isVerificationSent || !isVerificationChecked) {
+            if (!verificationController.isSent() || !verificationController.isChecked()) {
                 alert("이메일 인증은 필수입니다.");
                 isValid = false;
             }
@@ -504,15 +594,40 @@
         const passwordError = form.querySelector("[data-withdraw-password-error]");
         const nextButton = form.querySelector("[data-withdraw-verify-next]");
 
-        nextButton?.addEventListener("click", () => {
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
             if (!passwordInput.value.trim()) {
                 passwordError.textContent = "비밀번호를 입력하세요.";
                 return;
             }
 
-            passwordError.textContent = "";
-            closeModal(form.closest(".custom-modal-backdrop"), false);
-            openModalById("accountWithdrawConfirmModal", nextButton);
+            try {
+                nextButton.disabled = true;
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-CSRFToken": getCsrfToken(),
+                    },
+                    body: new FormData(form),
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    passwordError.textContent = data.message || "비밀번호가 일치하지 않습니다.";
+                    return;
+                }
+
+                passwordError.textContent = "";
+                closeModal(form.closest(".custom-modal-backdrop"), false);
+                openModalById("accountWithdrawConfirmModal", nextButton);
+            } catch (error) {
+                passwordError.textContent = "비밀번호 확인 중 오류가 발생했습니다.";
+            } finally {
+                nextButton.disabled = false;
+            }
         });
     });
 
@@ -523,6 +638,7 @@
         const emailFeedback = form.querySelector("[data-reset-email-feedback]");
         const sendCodeButton = form.querySelector("[data-reset-send-code]");
         const verificationInput = form.querySelector("[data-reset-verification]");
+        const verificationTimer = form.querySelector("[data-reset-verification-timer]");
         const verificationFeedback = form.querySelector("[data-reset-verification-feedback]");
         const resendButton = form.querySelector("[data-reset-resend]");
         const verificationCheckButton = form.querySelector("[data-reset-verification-check]");
@@ -531,15 +647,6 @@
         const passwordFeedback = form.querySelector("[data-reset-password-feedback]");
         const passwordConfirmInput = form.querySelector("[data-reset-password-confirm]");
         const passwordConfirmFeedback = form.querySelector("[data-reset-password-confirm-feedback]");
-        let isVerificationSent = false;
-        let isVerificationChecked = false;
-
-        function setFeedback(element, message, type = "error") {
-            if (!element) return;
-            element.textContent = message;
-            element.classList.remove("success", "error");
-            if (message) element.classList.add(type);
-        }
 
         function isValidEmail(value) {
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -549,57 +656,61 @@
             return /^(?=.*[A-Za-z])(?=.*\d).{8,16}$/.test(value);
         }
 
-        function sendResetVerificationCode() {
-            const email = emailInput.value.trim();
-            isVerificationSent = false;
-            isVerificationChecked = false;
+        const verificationController = createDummyVerificationController({
+            sendButtons: [sendCodeButton, resendButton],
+            checkButton: verificationCheckButton,
+            input: verificationInput,
+            timer: verificationTimer,
+            feedback: verificationFeedback,
+            beforeSend: async () => {
+                const email = emailInput.value.trim();
 
-            if (!email) {
-                setFeedback(emailFeedback, "이메일을 입력해주세요.");
-                return;
-            }
+                if (!email) {
+                    setFeedback(emailFeedback, "이메일을 입력해주세요.");
+                    return false;
+                }
 
-            if (!isValidEmail(email)) {
-                setFeedback(emailFeedback, "등록되어있지 않은 이메일입니다.");
-                return;
-            }
+                if (!isValidEmail(email)) {
+                    setFeedback(emailFeedback, "등록되어있지 않은 이메일입니다.");
+                    return false;
+                }
 
-            isVerificationSent = true;
-            setFeedback(emailFeedback, "");
-            alert("인증번호를 이메일로 발송했습니다. 이메일을 확인해 주세요.");
+                try {
+                    const response = await fetch(`${sendCodeButton.dataset.checkEmailUrl}?email=${encodeURIComponent(email)}`);
+                    const data = await response.json();
+
+                    if (data.available) {
+                        setFeedback(emailFeedback, "등록되어있지 않은 이메일입니다.");
+                        return false;
+                    }
+                } catch (error) {
+                    setFeedback(emailFeedback, "이메일 확인 중 오류가 발생했습니다.");
+                    return false;
+                }
+
+                setFeedback(emailFeedback, "");
+                return true;
+            },
+        });
+
+        const resetModal = form.closest(".custom-modal-backdrop");
+        if (resetModal) {
+            resetModal.addEventListener("modal:close", verificationController.reset);
         }
 
-        sendCodeButton?.addEventListener("click", () => {
-            sendResetVerificationCode();
-        });
-
-        resendButton?.addEventListener("click", () => {
-            if (!isVerificationSent) {
-                sendResetVerificationCode();
-                return;
-            }
-
-            alert("인증번호를 이메일로 발송했습니다. 이메일을 확인해 주세요.");
-        });
-
-        verificationCheckButton?.addEventListener("click", () => {
-            if (!verificationInput.value.trim()) {
-                setFeedback(verificationFeedback, "인증번호 입력해주세요");
-                isVerificationChecked = false;
-                return;
-            }
-
-            isVerificationChecked = true;
-            setFeedback(verificationFeedback, "인증번호 확인 성공", "success");
+        emailInput?.addEventListener("input", () => {
+            verificationController.reset();
+            setFeedback(emailFeedback, "");
+            setFeedback(verificationFeedback, "");
         });
 
         nextButton?.addEventListener("click", () => {
-            if (!isVerificationSent) {
+            if (!verificationController.isSent()) {
                 setFeedback(emailFeedback, "인증번호를 발송해주세요.");
                 return;
             }
 
-            if (!isVerificationChecked) {
+            if (!verificationController.isChecked()) {
                 setFeedback(verificationFeedback, "인증번호 입력해주세요");
                 return;
             }
@@ -626,8 +737,13 @@
             );
         });
 
-        form.addEventListener("submit", (event) => {
+        form.addEventListener("submit", async (event) => {
             event.preventDefault();
+
+            if (!verificationController.isChecked()) {
+                setFeedback(verificationFeedback, "이메일 인증을 완료해주세요.");
+                return;
+            }
 
             if (!isValidPassword(passwordInput.value)) {
                 setFeedback(passwordFeedback, "비밀번호 형식을 다시 확인해주세요.");
@@ -639,8 +755,33 @@
                 return;
             }
 
-            alert("비밀번호가 재설정되었습니다.");
-            openModalById("loginModal");
+            try {
+                const response = await fetch(form.dataset.passwordResetUrl, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-CSRFToken": getCsrfToken(),
+                    },
+                    body: new FormData(form),
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    alert(data.message || "비밀번호 재설정에 실패했습니다.");
+                    setFeedback(passwordConfirmFeedback, data.message || "비밀번호 재설정에 실패했습니다.");
+                    return;
+                }
+
+                alert(data.message);
+                form.reset();
+                verificationController.reset();
+                verifyStep.classList.remove("hidden");
+                passwordStep.classList.add("hidden");
+                openModalById("loginModal");
+            } catch (error) {
+                setFeedback(passwordConfirmFeedback, "비밀번호 재설정 중 오류가 발생했습니다.");
+            }
         });
     });
 

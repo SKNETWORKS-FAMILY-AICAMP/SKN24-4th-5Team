@@ -4,11 +4,37 @@ from .models import UserForm, UserDetail
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.db import transaction
+from django.db.models import Q
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 # Create your views here.
+def login(request):
+    if request.method == 'POST':
+        username = (request.POST.get('username') or '').strip()
+        password = request.POST.get('password') or ''
+        next_url = request.POST.get('next') or '/'
+
+        if not username or not password:
+            return JsonResponse(
+                {'success': False, 'message': '이메일과 비밀번호를 입력해주세요.'},
+                status=400,
+            )
+
+        user = auth.authenticate(request, username=username, password=password)
+
+        if user is None:
+            return JsonResponse(
+                {'success': False, 'message': '이메일 또는 비밀번호가 일치하지 않습니다.'},
+                status=400,
+            )
+
+        auth.login(request, user)
+        return JsonResponse({'success': True, 'redirect_url': next_url})
+
+    return render(request, 'uauth/login.html')
+
 def logout(request):
     auth.logout(request)
     return redirect('/')
@@ -47,6 +73,42 @@ def check_username(request):
     if is_exists:
         return JsonResponse({'available': False, 'message':'이미 사용중인 ID입니다.'})
     return JsonResponse({'available': True, 'message':'사용 가능한 ID입니다.'})
+
+def check_email(request):
+    email = (request.GET.get('email') or '').strip()
+
+    if not email:
+        return JsonResponse({'available': False, 'message': '이메일을 입력해주세요.'})
+
+    is_exists = User.objects.filter(email=email).exists() or User.objects.filter(username=email).exists()
+
+    if is_exists:
+        return JsonResponse({'available': False, 'message': '이미 사용중인 이메일입니다.'})
+    return JsonResponse({'available': True, 'message': '사용 가능한 이메일입니다.'})
+
+def password_reset_update(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': '잘못된 요청입니다.'}, status=405)
+
+    email = (request.POST.get('email') or '').strip()
+    new_password = request.POST.get('new_password') or ''
+    new_password_confirm = request.POST.get('new_password_confirm') or ''
+    user = User.objects.filter(Q(email__iexact=email) | Q(username__iexact=email)).first()
+
+    if not user:
+        return JsonResponse({'success': False, 'message': '등록되어있지 않은 이메일입니다.'}, status=400)
+
+    if new_password != new_password_confirm:
+        return JsonResponse({'success': False, 'message': '비밀번호가 일치하지 않습니다.'}, status=400)
+
+    try:
+        validate_password(new_password, user)
+    except ValidationError:
+        return JsonResponse({'success': False, 'message': '비밀번호 형식을 다시 확인해주세요.'}, status=400)
+
+    user.set_password(new_password)
+    user.save()
+    return JsonResponse({'success': True, 'message': '비밀번호가 재설정되었습니다.'})
 
 
 def _account_context(request, **extra):
@@ -97,12 +159,20 @@ def withdraw_verify(request):
 
     if request.method == 'POST':
         password = request.POST.get('password', '')
+        wants_json = 'application/json' in request.headers.get('Accept', '')
 
         if request.user.is_authenticated and request.user.check_password(password):
             request.session['withdraw_verified'] = True
+            if wants_json:
+                return JsonResponse({'success': True})
             return redirect('uauth:withdraw_confirm')
 
         errors['password'] = '비밀번호가 일치하지 않습니다.'
+        request.session.pop('withdraw_verified', None)
+        if wants_json:
+            return JsonResponse({'success': False, 'message': errors['password']}, status=400)
+    else:
+        request.session.pop('withdraw_verified', None)
 
     return render(
         request,
@@ -112,11 +182,15 @@ def withdraw_verify(request):
 
 
 def withdraw_confirm(request):
+    if not request.session.get('withdraw_verified'):
+        return redirect('uauth:withdraw_verify')
+
     if request.method == 'POST':
         if request.user.is_authenticated:
             user = request.user
             auth.logout(request)
             user.delete()
+            request.session.pop('withdraw_verified', None)
         return redirect('index')
 
     return render(
