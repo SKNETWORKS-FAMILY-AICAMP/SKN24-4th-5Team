@@ -19,6 +19,8 @@
         "DM Sans",
         -apple-system,
         BlinkMacSystemFont,
+        "Secular One",
+        "Tilt Warp",
         "Segoe UI",
         sans-serif;
     --background: #ffffff;
@@ -61,8 +63,10 @@ button {
 #main-content {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
     flex: 1;
-    min-height: 0;
+    height: 100vh;
 }
 
 /* Header */
@@ -109,9 +113,9 @@ button {
 
 .brand__name {
     color: #050506;
-    font-family: "Francois One";
+    font-family: "Secular One", sans-serif;
     font-size: 30px;
-    font-weight: 800;
+    font-weight: 600;
     line-height: 1;
     letter-spacing: 0;
     margin-top: 6px;
@@ -170,7 +174,8 @@ button {
 }
 
 .btn--ghost {
-    background: var(--soft);
+    background: white;
+    border: 1px solid #1a1f71;
     color: #18191f;
     width: 92px;
     height: 40px;
@@ -178,12 +183,14 @@ button {
 
 .btn--primary {
     background: var(--primary);
+    border: 1px solid #18191f;
     color: #ffffff;
     width: 92px;
     height: 40px;
 }
 .btn--secondary {
     color: var(--foreground);
+    border: 1px solid #18191f;
     width: 92px;
     height: 50px;
 }
@@ -369,9 +376,8 @@ button {
 }
 
 .hero-title {
-    font-family: "Francois One";
-    font-size: 96px;
-    font-weight: 900;
+    font-family: "Secular One";
+    font-size: 116px;
     line-height: 1.1;
     margin-bottom: 2.5rem;
     background: var(--gradient-primary);
@@ -409,7 +415,6 @@ button {
     font-weight: 600;
     transition: all 0.3s;
     cursor: pointer;
-    border: none;
     font-size: 1rem;
     font-family: "DM Sans", sans-serif;
 }
@@ -1487,6 +1492,101 @@ body.modal-open {
     width: min(100%, 420px);
 }
 
+.account-modal {
+    width: min(100%, 420px);
+    min-height: 320px;
+    padding: 44px 50px;
+    border: 1px solid #d9deeb;
+    border-radius: 20px;
+    box-shadow: none;
+}
+
+.account-modal--compact {
+    min-height: 280px;
+}
+
+.account-modal__title {
+    margin: 0 0 30px;
+    color: #2c2f3a;
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.account-modal__field {
+    margin-bottom: 22px;
+}
+
+.account-modal__input {
+    width: 100%;
+    height: 38px;
+    padding: 0 10px;
+    border: 0;
+    border-bottom: 2px solid #252c95;
+    border-radius: 0;
+    background: transparent;
+    color: #222638;
+    font: inherit;
+    outline: none;
+}
+
+.account-modal__input::placeholder {
+    color: #a1a5b1;
+}
+
+.account-modal__input:focus {
+    border-bottom-color: #1635d3;
+}
+
+.account-modal__error {
+    min-height: 19px;
+    margin: 6px 0 0;
+    color: #ff1c3d;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.account-modal__actions {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 28px;
+}
+
+.account-modal__button {
+    min-width: 118px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-bottom: 2px solid #182282;
+    border-radius: 11px;
+    background: #eeeeef;
+    color: #101960;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.account-modal__button:hover,
+.account-modal__button:focus-visible {
+    background: #e3e5ec;
+}
+
+.account-modal__danger {
+    margin: 0;
+    color: #f04444;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.9;
+    text-align: center;
+}
+
+.account-modal__danger + .account-modal__danger {
+    margin-top: 18px;
+}
+
 .footer-modal {
     width: min(100%, 520px);
 }
@@ -1566,7 +1666,8 @@ body.modal-open {
 
 .login-modal__field {
     display: grid;
-    gap: 0.45rem;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
 }
 
 .form-control {
@@ -1578,7 +1679,6 @@ body.modal-open {
     background: #ffffff;
     color: var(--foreground);
     font: inherit;
-    margin: 0.8rem 0;
 }
 
 .form-control:focus {
@@ -1758,6 +1858,7 @@ body.modal-open {
 
 .feedback.error {
     color: #dc2626;
+    margin: 0 0.5rem;
 }
 
 .feedback.success {

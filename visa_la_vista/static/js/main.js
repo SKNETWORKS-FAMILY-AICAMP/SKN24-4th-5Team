@@ -400,12 +400,73 @@
         });
     });
 
+    document.querySelectorAll("#accountPasswordChangeModal form").forEach((form) => {
+        const currentPassword = form.querySelector('input[name="current_password"]');
+        const newPassword = form.querySelector('input[name="new_password"]');
+        const newPasswordConfirm = form.querySelector('input[name="new_password_confirm"]');
+        const currentPasswordError = document.getElementById("accountCurrentPasswordError");
+        const newPasswordError = document.getElementById("accountNewPasswordError");
+        const newPasswordConfirmError = document.getElementById("accountNewPasswordConfirmError");
+
+        function isValidPassword(value) {
+            return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,16}$/.test(value);
+        }
+
+        function setError(element, message) {
+            if (element) element.textContent = message;
+        }
+
+        form.addEventListener("submit", (event) => {
+            let isValid = true;
+
+            setError(currentPasswordError, "");
+            setError(newPasswordError, "");
+            setError(newPasswordConfirmError, "");
+
+            if (!currentPassword.value.trim()) {
+                setError(currentPasswordError, "현재 비밀번호를 입력해주세요.");
+                isValid = false;
+            }
+
+            if (!isValidPassword(newPassword.value)) {
+                setError(newPasswordError, "비밀번호 형식을 다시 확인해주세요.");
+                isValid = false;
+            }
+
+            if (newPassword.value !== newPasswordConfirm.value) {
+                setError(newPasswordConfirmError, "비밀번호가 일치하지 않습니다.");
+                isValid = false;
+            }
+
+            if (!isValid) {
+                event.preventDefault();
+            }
+        });
+    });
+
+    document.querySelectorAll("[data-withdraw-verify-form]").forEach((form) => {
+        const passwordInput = form.querySelector("[data-withdraw-password]");
+        const passwordError = form.querySelector("[data-withdraw-password-error]");
+        const nextButton = form.querySelector("[data-withdraw-verify-next]");
+
+        nextButton?.addEventListener("click", () => {
+            if (!passwordInput.value.trim()) {
+                passwordError.textContent = "비밀번호를 입력하세요.";
+                return;
+            }
+
+            passwordError.textContent = "";
+            closeModal(form.closest(".custom-modal-backdrop"), false);
+            openModalById("accountWithdrawConfirmModal", nextButton);
+        });
+    });
+
     document.querySelectorAll("[data-password-reset-form]").forEach((form) => {
         const verifyStep = form.querySelector('[data-reset-step="verify"]');
         const passwordStep = form.querySelector('[data-reset-step="password"]');
         const emailInput = form.querySelector("[data-reset-email]");
         const emailFeedback = form.querySelector("[data-reset-email-feedback]");
-        const emailCheckButton = form.querySelector("[data-reset-email-check]");
+        const sendCodeButton = form.querySelector("[data-reset-send-code]");
         const verificationInput = form.querySelector("[data-reset-verification]");
         const verificationFeedback = form.querySelector("[data-reset-verification-feedback]");
         const resendButton = form.querySelector("[data-reset-resend]");
@@ -415,7 +476,7 @@
         const passwordFeedback = form.querySelector("[data-reset-password-feedback]");
         const passwordConfirmInput = form.querySelector("[data-reset-password-confirm]");
         const passwordConfirmFeedback = form.querySelector("[data-reset-password-confirm-feedback]");
-        let isEmailChecked = false;
+        let isVerificationSent = false;
         let isVerificationChecked = false;
 
         function setFeedback(element, message, type = "error") {
@@ -433,20 +494,33 @@
             return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,16}$/.test(value);
         }
 
-        emailCheckButton?.addEventListener("click", () => {
-            if (!isValidEmail(emailInput.value.trim())) {
-                setFeedback(emailFeedback, "이미 등록되어있는 이메일입니다");
-                isEmailChecked = false;
+        function sendResetVerificationCode() {
+            const email = emailInput.value.trim();
+            isVerificationSent = false;
+            isVerificationChecked = false;
+
+            if (!email) {
+                setFeedback(emailFeedback, "이메일을 입력해주세요.");
                 return;
             }
 
-            isEmailChecked = true;
+            if (!isValidEmail(email)) {
+                setFeedback(emailFeedback, "등록되어있지 않은 이메일입니다.");
+                return;
+            }
+
+            isVerificationSent = true;
             setFeedback(emailFeedback, "");
+            alert("인증번호를 이메일로 발송했습니다. 이메일을 확인해 주세요.");
+        }
+
+        sendCodeButton?.addEventListener("click", () => {
+            sendResetVerificationCode();
         });
 
         resendButton?.addEventListener("click", () => {
-            if (!isEmailChecked) {
-                setFeedback(emailFeedback, "이미 등록되어있는 이메일입니다");
+            if (!isVerificationSent) {
+                sendResetVerificationCode();
                 return;
             }
 
@@ -465,8 +539,8 @@
         });
 
         nextButton?.addEventListener("click", () => {
-            if (!isEmailChecked) {
-                setFeedback(emailFeedback, "이미 등록되어있는 이메일입니다");
+            if (!isVerificationSent) {
+                setFeedback(emailFeedback, "인증번호를 발송해주세요.");
                 return;
             }
 
