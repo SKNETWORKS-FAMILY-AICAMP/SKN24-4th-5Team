@@ -9,7 +9,7 @@
         <h2 class="login-modal__title" id="signupModalTitle">회원가입</h2>
       </div>
 
-      <form class="login-modal__form" name="modalUserCreateFrm" method="post" action="{% url 'uauth:signup' %}" enctype="multipart/form-data" data-signup-form novalidate>
+      <form class="login-modal__form" name="modalUserCreateFrm" method="post" action="{% url 'uauth:signup' %}" enctype="multipart/form-data" data-signup-form data-send-verification-url="{% url 'uauth:send_verification_email' %}" data-verify-email-url="{% url 'uauth:verify_email_code' %}" novalidate>
         {% csrf_token %}
         <input type="hidden" name="username" data-signup-username>
         <div class="login-modal__field">

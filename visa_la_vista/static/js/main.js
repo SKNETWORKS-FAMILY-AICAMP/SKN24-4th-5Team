@@ -187,10 +187,6 @@
         return `${minutes}:${seconds}`;
     }
 
-    function createDummyVerificationCode() {
-        return String(Math.floor(100000 + Math.random() * 900000));
-    }
-
     function getCsrfToken() {
         const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
         if (csrfInput) {
@@ -202,13 +198,12 @@
         return cookie ? decodeURIComponent(cookie.split("=")[1]) : "";
     }
 
-    function createDummyVerificationController(options) {
+    function createEmailVerificationController(options) {
         const sendButtons = options.sendButtons.filter(Boolean);
         let resendCooldownInterval = null;
         let verificationTimerInterval = null;
         let isVerificationSent = false;
         let isVerificationChecked = false;
-        let dummyVerificationCode = "";
         let verificationExpiresAt = 0;
 
         function startResendCooldown(button) {
@@ -231,7 +226,6 @@
 
         function expireVerification() {
             isVerificationChecked = false;
-            dummyVerificationCode = "";
             verificationExpiresAt = 0;
         }
 
@@ -263,20 +257,45 @@
                 if (!canSend) return;
             }
 
-            isVerificationSent = true;
-            isVerificationChecked = false;
-            dummyVerificationCode = createDummyVerificationCode();
-            verificationExpiresAt = Date.now() + 5 * 60 * 1000;
-            startResendCooldown(button);
-            startVerificationTimer();
-            setFeedback(options.feedback, "개발용 인증번호가 생성되었습니다.", "success");
-            alert(`개발용 더미 인증번호: ${dummyVerificationCode}`);
+            const formData = new FormData();
+            formData.append("email", options.emailInput.value.trim());
+            formData.append("purpose", options.purpose);
+
+            try {
+                button.disabled = true;
+                const response = await fetch(options.sendUrl, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-CSRFToken": getCsrfToken(),
+                    },
+                    body: formData,
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    setFeedback(options.feedback, data.message || "인증메일 발송에 실패했습니다.");
+                    button.disabled = false;
+                    return;
+                }
+
+                isVerificationSent = true;
+                isVerificationChecked = false;
+                verificationExpiresAt = Date.now() + 5 * 60 * 1000;
+                startResendCooldown(button);
+                startVerificationTimer();
+                setFeedback(options.feedback, data.message || "인증번호를 이메일로 발송했습니다.", "success");
+            } catch (error) {
+                setFeedback(options.feedback, "인증메일 발송 중 오류가 발생했습니다.");
+                button.disabled = false;
+            }
         }
 
-        function check() {
+        async function check() {
             const inputCode = options.input.value.trim();
 
-            if (!isVerificationSent || !dummyVerificationCode) {
+            if (!isVerificationSent) {
                 setFeedback(options.feedback, "인증번호를 먼저 전송해주세요.");
                 return;
             }
@@ -292,17 +311,38 @@
                 return;
             }
 
-            if (inputCode !== dummyVerificationCode) {
-                isVerificationChecked = false;
-                setFeedback(options.feedback, "인증번호가 일치하지 않습니다.");
-                return;
-            }
+            const formData = new FormData();
+            formData.append("email", options.emailInput.value.trim());
+            formData.append("code", inputCode);
+            formData.append("purpose", options.purpose);
 
-            isVerificationChecked = true;
-            window.clearInterval(verificationTimerInterval);
-            options.timer.textContent = "";
-            options.timer.classList.remove("is-expired");
-            setFeedback(options.feedback, "인증번호 확인 성공", "success");
+            try {
+                const response = await fetch(options.verifyUrl, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-CSRFToken": getCsrfToken(),
+                    },
+                    body: formData,
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    isVerificationChecked = false;
+                    setFeedback(options.feedback, data.message || "인증번호가 일치하지 않습니다.");
+                    return;
+                }
+
+                isVerificationChecked = true;
+                window.clearInterval(verificationTimerInterval);
+                options.timer.textContent = "";
+                options.timer.classList.remove("is-expired");
+                setFeedback(options.feedback, data.message || "인증번호 확인 성공", "success");
+            } catch (error) {
+                isVerificationChecked = false;
+                setFeedback(options.feedback, "인증번호 확인 중 오류가 발생했습니다.");
+            }
         }
 
         function reset() {
@@ -310,7 +350,6 @@
             window.clearInterval(verificationTimerInterval);
             isVerificationSent = false;
             isVerificationChecked = false;
-            dummyVerificationCode = "";
             verificationExpiresAt = 0;
 
             sendButtons.forEach((button) => {
@@ -426,12 +465,16 @@
             return /^(?=.*[A-Za-z])(?=.*\d).{8,16}$/.test(value);
         }
 
-        const verificationController = createDummyVerificationController({
+        const verificationController = createEmailVerificationController({
             sendButtons: [sendVerificationButton],
             checkButton: verificationCheckButton,
             input: verificationInput,
+            emailInput,
             timer: verificationTimer,
             feedback: verificationFeedback,
+            sendUrl: form.dataset.sendVerificationUrl,
+            verifyUrl: form.dataset.verifyEmailUrl,
+            purpose: "signup",
             beforeSend: () => {
                 if (!isEmailChecked) {
                     alert("이메일 중복 확인 먼저해주세요.");
@@ -656,12 +699,16 @@
             return /^(?=.*[A-Za-z])(?=.*\d).{8,16}$/.test(value);
         }
 
-        const verificationController = createDummyVerificationController({
+        const verificationController = createEmailVerificationController({
             sendButtons: [sendCodeButton, resendButton],
             checkButton: verificationCheckButton,
             input: verificationInput,
+            emailInput,
             timer: verificationTimer,
             feedback: verificationFeedback,
+            sendUrl: form.dataset.sendVerificationUrl,
+            verifyUrl: form.dataset.verifyEmailUrl,
+            purpose: "password_reset",
             beforeSend: async () => {
                 const email = emailInput.value.trim();
 
