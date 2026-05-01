@@ -3,7 +3,6 @@ pycache/
 *.pyc
 *.pyo
 *.pyd
-env
 *.sqlite3
 
 # Virtual Environment
@@ -28,4 +27,3 @@ Thumbs.db
 
 .env
 skn24_kat.pem
-.vscode

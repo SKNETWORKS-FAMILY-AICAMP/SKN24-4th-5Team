@@ -1,0 +1,78 @@
+{% if user.is_authenticated %}
+  <div class="custom-modal-backdrop" id="accountPasswordChangeModal" role="dialog" aria-modal="true" aria-labelledby="accountPasswordChangeTitle" hidden>
+    <div class="custom-modal auth-modal account-modal" role="document">
+      <button class="custom-modal-close" type="button" aria-label="비밀번호 수정 창 닫기" data-modal-close>
+        &times;
+      </button>
+
+      <form class="account-modal__form" method="post" action="{% url 'uauth:password_change' %}">
+        {% csrf_token %}
+        <h2 class="account-modal__title" id="accountPasswordChangeTitle">비밀번호 수정</h2>
+
+        <div class="account-modal__field">
+          <input class="account-modal__input" type="password" name="current_password" autocomplete="current-password" placeholder="현재 비밀번호" aria-describedby="accountCurrentPasswordError">
+          <p class="account-modal__error" id="accountCurrentPasswordError"></p>
+        </div>
+
+        <div class="account-modal__field">
+          <input class="account-modal__input" type="password" name="new_password" autocomplete="new-password" placeholder="새 비밀번호  (8~16자, 영어 대소문자, 숫자, 특수문자)" aria-describedby="accountNewPasswordError">
+          <p class="account-modal__error" id="accountNewPasswordError"></p>
+        </div>
+
+        <div class="account-modal__field">
+          <input class="account-modal__input" type="password" name="new_password_confirm" autocomplete="new-password" placeholder="새 비밀번호 확인" aria-describedby="accountNewPasswordConfirmError">
+          <p class="account-modal__error" id="accountNewPasswordConfirmError"></p>
+        </div>
+
+        <div class="account-modal__actions">
+          <button class="account-modal__button" type="submit">확인</button>
+          <button class="account-modal__button" type="button" data-modal-close>취소</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="custom-modal-backdrop" id="accountWithdrawVerifyModal" role="dialog" aria-modal="true" aria-labelledby="accountWithdrawVerifyTitle" hidden>
+    <div class="custom-modal auth-modal account-modal account-modal--compact" role="document">
+      <button class="custom-modal-close" type="button" aria-label="본인 확인 창 닫기" data-modal-close>
+        &times;
+      </button>
+
+      <form class="account-modal__form" method="post" action="{% url 'uauth:withdraw_verify' %}" data-withdraw-verify-form>
+        {% csrf_token %}
+        <h2 class="account-modal__title" id="accountWithdrawVerifyTitle">본인 확인</h2>
+
+        <div class="account-modal__field">
+          <input class="account-modal__input" type="password" name="password" autocomplete="current-password" placeholder="비밀번호를 입력하세요." aria-describedby="accountWithdrawPasswordError" data-withdraw-password>
+          <p class="account-modal__error" id="accountWithdrawPasswordError" data-withdraw-password-error></p>
+        </div>
+
+        <div class="account-modal__actions">
+          <button class="account-modal__button" type="submit" data-withdraw-verify-next>확인</button>
+          <button class="account-modal__button" type="button" data-modal-close>취소</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="custom-modal-backdrop" id="accountWithdrawConfirmModal" role="dialog" aria-modal="true" aria-labelledby="accountWithdrawConfirmTitle" hidden>
+    <div class="custom-modal auth-modal account-modal account-modal--compact" role="document">
+      <button class="custom-modal-close" type="button" aria-label="회원 탈퇴 창 닫기" data-modal-close>
+        &times;
+      </button>
+
+      <form class="account-modal__form" method="post" action="{% url 'uauth:withdraw_confirm' %}">
+        {% csrf_token %}
+        <h2 class="account-modal__title" id="accountWithdrawConfirmTitle">회원 탈퇴</h2>
+
+        <p class="account-modal__danger">탈퇴하면 저장된 모든 정보가 삭제됩니다.</p>
+        <p class="account-modal__danger">정말로 탈퇴하시겠습니까?</p>
+
+        <div class="account-modal__actions">
+          <button class="account-modal__button" type="submit">확인</button>
+          <button class="account-modal__button" type="button" data-modal-close>취소</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endif %}

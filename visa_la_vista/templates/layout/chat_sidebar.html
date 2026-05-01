@@ -2,30 +2,18 @@
 
 <aside id="chat-sidebar" class="chat-sidebar open">
     <div class="sidebar-header">
-        <button class="btn-new-chat" id="new-chat-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            <span>New Chat</span>
-        </button>
-
+        <h2 class="sidebar-title">입시 상담 챗봇</h2>
     </div>
 
     <div class="sidebar-conversations" id="conversations-list"></div>
 
     <div class="sidebar-footer">
-        <button class="user-profile">
-            <div class="user-avatar">{{ user.username|first|upper|default:"U" }}</div>
-            <div class="user-info">
-                <p class="user-name">{{ user.username|default:"Guest User" }}</p>
-                <p class="user-email">{{ user.email|default:"user@example.com" }}</p>
-            </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="1" />
-                <circle cx="12" cy="5" r="1" />
-                <circle cx="12" cy="19" r="1" />
+        <button class="btn-new-chat" id="new-chat-btn" type="button">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
+            <span>새 채팅</span>
         </button>
     </div>
 </aside>

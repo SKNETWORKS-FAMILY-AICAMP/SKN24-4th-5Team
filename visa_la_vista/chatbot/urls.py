@@ -25,7 +25,8 @@ urlpatterns = [
     # path('', TemplateView.as_view(template_name='chatbot/chat_page.html'), name='chat'),
     path('chat', views.chat_list, name='chat'),
     path('interview', views.interview_page, name='interview'),
+    path('api/chat/messages', views.chat_message_create, name='chat_message_create'),
+    path('api/interview/sessions', views.interview_session_create, name='interview_session_create'),
     # path('interview', TemplateView.as_view(template_name='chatbot/interview_page.html'), name='interview'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
-
