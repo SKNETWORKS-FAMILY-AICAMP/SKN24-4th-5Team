@@ -26,7 +26,7 @@ urlpatterns = [
     path('chat', views.chat_list, name='chat'),
     path('interview', views.interview_page, name='interview'),
     path('api/chat/messages', views.chat_message_create, name='chat_message_create'),
-    path('api/interview/sessions', views.interview_session_create, name='interview_session_create'),
+    # path('api/interview/sessions', views.interview_session_create, name='interview_session_create'),
     path('admission/chat/history/<str:chat_id>/', views.get_history, name='get_history'),
     path('api/chat/conversations/<str:conversation_id>/delete', views.chat_conversation_delete, name='chat_conversation_delete'),
 
