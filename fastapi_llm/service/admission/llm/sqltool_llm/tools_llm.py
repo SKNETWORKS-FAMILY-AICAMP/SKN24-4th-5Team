@@ -1,7 +1,7 @@
 
 from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from langchain_ollama import ChatOllama
-from db.query_connection import get_db
+from ...db.query_connection import get_db
 import os
 
 # os.chdir("/workspace/3차프로젝트")
@@ -17,8 +17,9 @@ def build_tools_and_llm():
 
     llm = ChatOllama(
         # model="ebdm/gemma3-enhanced:12b",
-        model="ebdm/gemma3-enhanced:12b",
-        temperature=0
+        model="qwen2.5:3b",
+        temperature=0,
+         num_predict=500
     )
 
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)

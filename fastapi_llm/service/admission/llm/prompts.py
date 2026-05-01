@@ -1,4 +1,4 @@
-from db.query_connection import get_db
+from ..db.query_connection import get_db
 db = get_db()
 generate_query_system_prompt = """
 [최우선 규칙]

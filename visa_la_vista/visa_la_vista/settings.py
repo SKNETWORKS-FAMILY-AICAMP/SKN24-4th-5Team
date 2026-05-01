@@ -47,11 +47,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-    'rest_framework',
-    'drf_yasg',
-    'django_filters',
+    # 'rest_framework',
+    # 'drf_yasg',
+    # 'django_filters',
     'chatbot',
-    'uauth',
+    'uauth', 'daphne'
 ]
 
 MIDDLEWARE = [
@@ -104,7 +104,7 @@ DATABASES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'qnadb',
+        'NAME': 'serv1',
         'USER' : 'django',
         'PASSWORD' : 'django', 
         'HOST' : '127.0.0.1',
