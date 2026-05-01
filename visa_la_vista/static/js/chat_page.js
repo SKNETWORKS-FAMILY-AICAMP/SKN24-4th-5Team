@@ -151,69 +151,174 @@
         }
     }
 
-    function sendMessage(content) {
-        if (!content.trim()) return;
+async function sendMessage(content) {
+    if (!content.trim()) return;
 
-        const userMessage = {
-            id: Date.now().toString(),
-            role: "user",
-            content: content.trim(),
-            timestamp: new Date(),
-        };
-        messages.push(userMessage);
-        renderMessages();
-        messageInput.value = "";
-        updateSendButton();
-
-        fetch(chatMessageUrl, {
+    // ✅ 1. conversation 없으면 먼저 생성
+    if (!activeConversation) {
+        const res = await fetch("/api/chat/create-conversation", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "X-CSRFToken": getCsrfToken(),
             },
-            body: JSON.stringify({
-                conversation_id: activeConversation,
-                content: content.trim(),
-            }),
-        })
-            .then((response) => (response.ok ? response.json() : Promise.reject(response)))
-            .then((data) => {
-                const exists = conversations.some((conversation) => conversation.id === data.conversation.id);
-                if (!exists) {
-                    conversations = [data.conversation, ...conversations];
+            body: JSON.stringify({ content: content.trim() }),
+        });
+
+        const data = await res.json();
+
+        activeConversation = data.conversation_id;
+
+        // 👉 사이드바에 추가
+        const newConv = {
+            id: data.conversation_id,
+            title: data.title,
+            group: "오늘",
+            messages: [],
+        };
+
+        conversations.unshift(newConv);
+        chatTitleDisplay.innerText = data.title;
+
+        renderConversations();
+    }
+
+    // ✅ 2. 사용자 메시지 추가
+    const userMessage = {
+        id: Date.now().toString(),
+        role: "user",
+        content: content.trim(),
+        timestamp: new Date(),
+    };
+
+    messages.push(userMessage);
+    renderMessages();
+
+    messageInput.value = "";
+    updateSendButton();
+
+    // ✅ 3. assistant placeholder (스트리밍용)
+    let assistantMessage = {
+        id: "stream",
+        role: "assistant",
+        content: "",
+        timestamp: new Date(),
+    };
+
+    messages.push(assistantMessage);
+    renderMessages();
+
+    // ✅ 4. 스트리밍 요청
+    const response = await fetch(chatMessageUrl, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCsrfToken(),
+        },
+        body: JSON.stringify({
+            conversation_id: activeConversation,
+            content: content.trim(),
+        }),
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    let fullText = "";
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+
+        for (let line of lines) {
+            if (line.startsWith("data:")) {
+                const data = line.replace("data:", "").trim();
+
+                if (data === "[DONE]") {
+                    return;
                 }
 
-                activeConversation = data.conversation.id;
-                chatTitleDisplay.innerText = data.conversation.title;
-                messages = messages.filter((message) => message.id !== userMessage.id);
-                data.messages.forEach((message) => {
-                    messages.push({
-                        ...message,
-                        timestamp: new Date(message.timestamp),
-                    });
-                });
-                const savedConversation = conversations.find(
-                    (conversation) => conversation.id === data.conversation.id,
-                );
-                if (savedConversation) {
-                    savedConversation.messages = messages.map((message) => ({
-                        ...message,
-                        timestamp: message.timestamp.toISOString(),
-                    }));
-                }
-                renderMessages();
-                renderConversations();
-            })
-            .catch(() => {
-                messages.push({
-                    id: Date.now().toString(),
-                    role: "assistant",
-                    content: "메시지를 저장하지 못했습니다. 잠시 후 다시 시도해주세요.",
-                    timestamp: new Date(),
-                });
-                renderMessages();
-            });
+                try {
+                    const json = JSON.parse(data);
+                    const token = json.token;
+
+                    fullText += token;
+
+                    // ✅ 스트리밍 업데이트
+                    assistantMessage.content = fullText;
+                    renderMessages();
+
+                } catch (e) {}
+            }
+        }
     }
+}
+    // function sendMessage(content) {
+    //     if (!content.trim()) return;
+
+    //     const userMessage = {
+    //         id: Date.now().toString(),
+    //         role: "user",
+    //         content: content.trim(),
+    //         timestamp: new Date(),
+    //     };
+    //     messages.push(userMessage);
+    //     renderMessages();
+    //     messageInput.value = "";
+    //     updateSendButton();
+
+    //     fetch(chatMessageUrl, {
+    //         method: "POST",
+    //         headers: {
+    //             "Content-Type": "application/json",
+    //             "X-CSRFToken": getCsrfToken(),
+    //         },
+    //         body: JSON.stringify({
+    //             conversation_id: activeConversation,
+    //             content: content.trim(),
+    //         }),
+    //     })
+    //         .then((response) => (response.ok ? response.json() : Promise.reject(response)))
+    //         .then((data) => {
+    //             const exists = conversations.some((conversation) => conversation.id === data.conversation.id);
+    //             if (!exists) {
+    //                 conversations = [data.conversation, ...conversations];
+    //             }
+
+    //             activeConversation = data.conversation.id;
+    //             chatTitleDisplay.innerText = data.conversation.title;
+    //             messages = messages.filter((message) => message.id !== userMessage.id);
+    //             data.messages.forEach((message) => {
+    //                 messages.push({
+    //                     ...message,
+    //                     timestamp: new Date(message.timestamp),
+    //                 });
+    //             });
+    //             const savedConversation = conversations.find(
+    //                 (conversation) => conversation.id === data.conversation.id,
+    //             );
+    //             if (savedConversation) {
+    //                 savedConversation.messages = messages.map((message) => ({
+    //                     ...message,
+    //                     timestamp: message.timestamp.toISOString(),
+    //                 }));
+    //             }
+    //             renderMessages();
+    //             renderConversations();
+    //         })
+    //         .catch(() => {
+    //             messages.push({
+    //                 id: Date.now().toString(),
+    //                 role: "assistant",
+    //                 content: "메시지를 저장하지 못했습니다. 잠시 후 다시 시도해주세요.",
+    //                 timestamp: new Date(),
+    //             });
+    //             renderMessages();
+    //         });
+    // }
 
     function getCsrfToken() {
         const cookie = document.cookie.split("; ").find((row) => row.startsWith("csrftoken="));

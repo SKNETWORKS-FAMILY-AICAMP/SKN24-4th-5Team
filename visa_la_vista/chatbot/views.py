@@ -1,8 +1,13 @@
 import json
+import httpx
 
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+
+
+FASTAPI_URL = "http://127.0.0.1:8001"
+FASTAPI_SECRET_KEY = "66b15280d3145859f2e9e42bb8b41db32c85317ceaefba8144a33412cca50bbb"
 
 from .models import (
     AdmissionChatConversation,
@@ -104,99 +109,128 @@ def interview_page(request):
     )
 
 
+# @require_POST
+# def chat_message_create(request):
+#     payload = json.loads(request.body or '{}')
+#     conversation_id = payload.get('conversation_id')
+#     content = (payload.get('content') or '').strip()
+
+#     if not content:
+#         return JsonResponse({'error': '메시지를 입력해주세요.'}, status=400)
+
+#     if conversation_id:
+#         conversation = AdmissionChatConversation.objects.filter(id=conversation_id).first()
+#     else:
+#         conversation = None
+
+#     if conversation is None:
+#         conversation = AdmissionChatConversation.objects.create(
+#             title=content[:40],
+#             user=request.user if request.user.is_authenticated else None,
+#             group_label='오늘',
+#         )
+
+#     user_message = AdmissionChatMessage.objects.create(
+#         conversation=conversation,
+#         role=AdmissionChatMessage.ROLE_USER,
+#         content=content,
+#     )
+#     assistant_message = AdmissionChatMessage.objects.create(
+#         conversation=conversation,
+#         role=AdmissionChatMessage.ROLE_ASSISTANT,
+#         content="This is a sample response saved from the database-backed chat flow.",
+#     )
+#     conversation.save()
+
+#     return JsonResponse(
+#         {
+#             'conversation': {
+#                 'id': str(conversation.id),
+#                 'title': conversation.title,
+#                 'group': conversation.group_label,
+#             },
+#             'messages': [
+#                 {
+#                     'id': str(user_message.id),
+#                     'role': user_message.role,
+#                     'content': user_message.content,
+#                     'timestamp': user_message.created_at.isoformat(),
+#                 },
+#                 {
+#                     'id': str(assistant_message.id),
+#                     'role': assistant_message.role,
+#                     'content': assistant_message.content,
+#                     'timestamp': assistant_message.created_at.isoformat(),
+#                 },
+#             ],
+#         },
+#         status=201,
+#     )
+import json
+import httpx
+import os
+
+from django.http import StreamingHttpResponse, JsonResponse
+from django.views.decorators.http import require_POST
+
+FASTAPI_URL = "http://127.0.0.1:8001"
+FASTAPI_SECRET_KEY  = os.getenv("FASTAPI_SECRET_KEY")
+
+# @login_required(login_url='/login/')
 @require_POST
-def chat_message_create(request):
+async def chat_message_stream(request):
     payload = json.loads(request.body or '{}')
-    conversation_id = payload.get('conversation_id')
     content = (payload.get('content') or '').strip()
+    conversation_id = payload.get("conversation_id") or "default"
 
     if not content:
         return JsonResponse({'error': '메시지를 입력해주세요.'}, status=400)
 
-    if conversation_id:
-        conversation = AdmissionChatConversation.objects.filter(id=conversation_id).first()
-    else:
-        conversation = None
-
-    if conversation is None:
-        conversation = AdmissionChatConversation.objects.create(
-            title=content[:40],
-            user=request.user if request.user.is_authenticated else None,
-            group_label='오늘',
-        )
-
-    user_message = AdmissionChatMessage.objects.create(
-        conversation=conversation,
-        role=AdmissionChatMessage.ROLE_USER,
-        content=content,
-    )
-    assistant_message = AdmissionChatMessage.objects.create(
-        conversation=conversation,
-        role=AdmissionChatMessage.ROLE_ASSISTANT,
-        content="This is a sample response saved from the database-backed chat flow.",
-    )
-    conversation.save()
-
-    return JsonResponse(
-        {
-            'conversation': {
-                'id': str(conversation.id),
-                'title': conversation.title,
-                'group': conversation.group_label,
-            },
-            'messages': [
-                {
-                    'id': str(user_message.id),
-                    'role': user_message.role,
-                    'content': user_message.content,
-                    'timestamp': user_message.created_at.isoformat(),
+    async def event_stream():
+        async with httpx.AsyncClient(timeout=None) as client:
+            async with client.stream(
+                "POST",
+                f"{FASTAPI_URL}/admission/chat/v1",
+                json={
+                    "user_id": str(request.user.id) if request.user.is_authenticated else "anonymous",
+                    "chat_id": conversation_id,
+                    "question": content,
                 },
-                {
-                    'id': str(assistant_message.id),
-                    'role': assistant_message.role,
-                    'content': assistant_message.content,
-                    'timestamp': assistant_message.created_at.isoformat(),
-                },
-            ],
-        },
-        status=201,
-    )
+                headers={"x-api-key": FASTAPI_SECRET_KEY},
+            ) as resp:
+                async for chunk in resp.aiter_text():
+                    yield chunk
+
+    return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+
+
+from .models import AdmissionChatConversation
+
+def extract_title(text: str) -> str:
+    # 간단 키워드 추출 (앞 15자)
+    return text.strip()[:15]
 
 
 @require_POST
-def interview_session_create(request):
+def create_conversation(request):
     payload = json.loads(request.body or '{}')
-    mode = payload.get('mode')
+    content = payload.get('content')
+    conversation_id = payload.get('conversation_id')
 
-    if mode not in dict(VisaInterviewModeDescription.MODE_CHOICES):
-        return JsonResponse({'error': '올바른 인터뷰 모드를 선택해주세요.'}, status=400)
+    # 이미 있으면 패스
+    if conversation_id:
+        return JsonResponse({"conversation_id": conversation_id})
 
-    session = VisaInterviewSession.objects.create(
+    # 없으면 새로 생성
+    title = extract_title(content)
+
+    conversation = AdmissionChatConversation.objects.create(
+        title=title,
         user=request.user if request.user.is_authenticated else None,
-        mode=mode,
-        uploaded_file_name=payload.get('uploaded_file_name', ''),
-        question_count=payload.get('question_count') or None,
-        status=VisaInterviewSession.STATUS_IN_PROGRESS,
+        group_label="오늘"
     )
 
-    first_question = (
-        VisaInterviewQuestion.objects
-        .filter(mode=mode, is_active=True)
-        .order_by('order', 'id')
-        .first()
-    )
-
-    return JsonResponse(
-        {
-            'session': {
-                'id': session.id,
-                'mode': session.mode,
-                'status': session.status,
-            },
-            'question': {
-                'id': first_question.id,
-                'text': first_question.question_text,
-            } if first_question else None,
-        },
-        status=201,
-    )
+    return JsonResponse({
+        "conversation_id": str(conversation.id),
+        "title": conversation.title
+    })

@@ -1,8 +1,8 @@
 from langgraph.graph import MessagesState
 from langchain_core.messages import AIMessage, ToolMessage, SystemMessage
-from sqltool_llm.tools_llm import build_tools_and_llm
+from ..sqltool_llm.tools_llm import build_tools_and_llm
 from typing import Dict, Any
-from prompts import (
+from ..prompts import (
     generate_query_system_prompt,
     check_query_system_prompt,
     retry_query_system_prompt,
@@ -52,7 +52,6 @@ def generate_query(state: MessagesState):
     
 def check_query(state: MessagesState):
     """쿼리 검증"""
-    from prompts import check_query_system_prompt
     llm, tools = build_tools_and_llm()
     run_query_tool = next(tool for tool in tools if tool.name == "sql_db_query")
 
@@ -63,7 +62,6 @@ def check_query(state: MessagesState):
 
 def retry_query(state: MessagesState):
     """실패 시 재시도 로직"""
-    from prompts import retry_query_system_prompt
     
     retry_count = state.get('retry_count', 0)
     if retry_count >= 3:
@@ -97,7 +95,6 @@ def retry_query(state: MessagesState):
 
 
 def generate_answer(state: MessagesState):
-    from prompts import generate_answer_system_prompt
     llm, _ = build_tools_and_llm()
 
     tool_results = [
@@ -126,32 +123,6 @@ def generate_answer(state: MessagesState):
 
 search = DuckDuckGoSearchRun()
 
-
-
-# def web_search_node(state: MessagesState):
-#     # 첫 번째 메시지(사용자 질문)에서 대학 이름을 추출하는 로직이 있다고 가정
-#     user_query = state["messages"][0].content
-    
-#     # 검색 쿼리 예시: "상하이 대학교" official admission website URL -SJTU
-#     # 검색 결과에서 다른 유명 대학(SJTU 등)을 제외하는 연산자(-)를 동적으로 붙일 수도 있습니다.
-#     search_query = f'"{user_query}" official international admission website URL'
-    
-#     print(f"--- [범용 검색 실행] ---: {search_query}")
-#     search_result = search.run(search_query)
-    
-# return {
-#     "messages": [
-#         ("system", f"""
-#         CRITICAL INSTRUCTION: 
-#         1. 당신은 현재 '{user_query}'에 대한 정보만 찾아야 합니다.
-#         2. 아래 검색 결과 중 학교 이름이 '{user_query}'와 100% 일치하지 않는 데이터(예: 하버드, 교통대 등)는 절대 답변에 포함하지 마세요.
-#         3. 만약 모든 결과가 일치하지 않는다면 "죄송하지만 요청하신 대학의 공식 정보를 찾지 못했습니다"라고 답변하세요.
-        
-#         [검색 결과]:
-#         {search_result}
-#         """)
-#     ]
-# }
 def web_search_node(state: MessagesState):
     # 첫 번째 메시지(사용자 질문)에서 대학 이름을 추출하는 로직이 있다고 가정
     user_query = state["messages"][0].content
