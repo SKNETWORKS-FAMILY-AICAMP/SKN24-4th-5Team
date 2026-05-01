@@ -14,6 +14,8 @@ class AdmissionChatConversation(models.Model):
     group_label = models.CharField(max_length=20, default='오늘')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)     
+    deleted_at = models.DateTimeField(null=True, blank=True) 
 
     class Meta:
         ordering = ['-updated_at', '-id']
@@ -164,16 +166,12 @@ from django.db import models
 class ChatMessage(models.Model):
     user_id    = models.CharField(max_length=255, db_index=True)
     chat_id    = models.CharField(max_length=255, db_index=True)
-    role       = models.CharField(max_length=20)   # "user" | "assistant"
+    role       = models.CharField(max_length=20)   # user | assistant
     content    = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
- 
+
     class Meta:
         ordering = ["created_at"]
- 
-    def __str__(self):
-        return f"[{self.chat_id}] {self.role}: {self.content[:30]}"
- 
  
 # ─────────────────────────────────────────────────────────────
 # 방식 2: chat_id 단위로 messages JSONField에 통째로 저장
