@@ -3,6 +3,7 @@ pycache/
 *.pyc
 *.pyo
 *.pyd
+env
 *.sqlite3
 
 # Virtual Environment
