@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<div id="chat-page" class="page active" data-assistant-icon="{% static 'images/icon.png' %}" data-chat-message-url="{% url 'chat_stream' %}">
+<div id="chat-page" class="page active" data-assistant-icon="{% static 'images/icon.png' %}" data-chat-message-url="{% url 'chat_message_create' %}">
     {% include "layout/chat_sidebar.html" %}
 
     <div id="chat-main" class="chat-main">

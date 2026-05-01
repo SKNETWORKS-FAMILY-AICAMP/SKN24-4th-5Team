@@ -40,6 +40,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1'] #'elastic',
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -51,7 +52,7 @@ INSTALLED_APPS = [
     # 'drf_yasg',
     # 'django_filters',
     'chatbot',
-    'uauth', 'daphne'
+    'uauth', 
 ]
 
 MIDDLEWARE = [
@@ -82,7 +83,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'visa_la_vista.wsgi.application'
-
+ASGI_APPLICATION = 'visa_la_vista.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
