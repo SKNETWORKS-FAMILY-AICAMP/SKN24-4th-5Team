@@ -5,6 +5,7 @@ import httpx
 from django.shortcuts import render
 from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.http import require_POST
+from django.utils import timezone
 
 from .models import (
     AdmissionChatConversation,
@@ -19,7 +20,9 @@ FASTAPI_SECRET_KEY = os.getenv("FASTAPI_SECRET_KEY", "")
 
 
 def _chat_queryset_for_user(request):
-    queryset = AdmissionChatConversation.objects.prefetch_related('messages')
+    queryset = AdmissionChatConversation.objects.prefetch_related('messages').filter(
+        is_deleted=False
+    )
     if request.user.is_authenticated:
         user_queryset = queryset.filter(user=request.user)
         if user_queryset.exists():
@@ -139,6 +142,8 @@ async def chat_message_create(request):
         }, ensure_ascii=False)
         yield f"data: {meta}\n\n"
 
+        full_answer = ""
+
         async with httpx.AsyncClient(timeout=300) as client:
             async with client.stream(
                 "POST",
@@ -149,22 +154,31 @@ async def chat_message_create(request):
                 async for line in resp.aiter_lines():
                     if not line:
                         continue
+                    # 토큰 모아서 full_answer 구성
+                    if line.startswith("data:"):
+                        data = line[5:].strip()
+                        if data != "[DONE]":
+                            try:
+                                token = json.loads(data).get("token", "")
+                                full_answer += token
+                            except:
+                                pass
                     yield line + "\n\n"
+
+        # 스트림 끝난 후 AdmissionChatMessage 저장 (화면 표시용)
+        await AdmissionChatMessage.objects.acreate(
+            conversation=conversation,
+            role=AdmissionChatMessage.ROLE_USER,
+            content=content,
+        )
+        await AdmissionChatMessage.objects.acreate(
+            conversation=conversation,
+            role=AdmissionChatMessage.ROLE_ASSISTANT,
+            content=full_answer,
+        )
 
     return StreamingHttpResponse(stream(), content_type="text/event-stream")
 
-
-def _chat_queryset_for_user(request):
-    queryset = AdmissionChatConversation.objects.prefetch_related('messages').filter(
-        is_deleted=False  # ← 추가
-    )
-    if request.user.is_authenticated:
-        user_queryset = queryset.filter(user=request.user)
-        if user_queryset.exists():
-            return user_queryset
-    return queryset.filter(user__isnull=True)
-
-from django.utils import timezone
 
 @require_POST
 def chat_conversation_delete(request, conversation_id):
@@ -175,6 +189,7 @@ def chat_conversation_delete(request, conversation_id):
     conversation.deleted_at = timezone.now()
     conversation.save()
     return JsonResponse({'ok': True})
+
 
 # @require_POST
 # def interview_session_create(request):

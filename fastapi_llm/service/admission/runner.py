@@ -7,7 +7,7 @@ import json
 from service.admission.schemas import AgentRequest
 from .service1_agent import run_service_1_agent, HISTORY_LIMIT
 
-from chatbot.models import AdmissionChatConversation, AdmissionChatMessage
+from chatbot.models import ChatMessage  # FastAPI 전용 히스토리 테이블
 
 
 async def _run_llm(question: str, history: list):
@@ -28,10 +28,10 @@ async def chat_v1_logic(agent_request: AgentRequest, http_request: Request):
     chat_id = agent_request.chat_id
     user_id = agent_request.user_id
 
-    # 1. 대화 히스토리 읽기
+    # 1. 히스토리 읽기 (ChatMessage - FastAPI 전용)
     rows = await sync_to_async(list)(
-        AdmissionChatMessage.objects
-        .filter(conversation_id=chat_id)
+        ChatMessage.objects
+        .filter(chat_id=chat_id)
         .order_by("created_at")[:HISTORY_LIMIT]
     )
 
@@ -40,16 +40,18 @@ async def chat_v1_logic(agent_request: AgentRequest, http_request: Request):
     # 2. LLM 실행
     answer = await _run_llm(agent_request.question, history)
 
-    # 3. DB 저장
+    # 3. ChatMessage 저장 (FastAPI 전용, FK 없음)
     def save():
-        AdmissionChatMessage.objects.bulk_create([
-            AdmissionChatMessage(
-                conversation_id=chat_id,
+        ChatMessage.objects.bulk_create([
+            ChatMessage(
+                user_id=user_id,
+                chat_id=chat_id,
                 role="user",
                 content=agent_request.question,
             ),
-            AdmissionChatMessage(
-                conversation_id=chat_id,
+            ChatMessage(
+                user_id=user_id,
+                chat_id=chat_id,
                 role="assistant",
                 content=answer,
             ),
