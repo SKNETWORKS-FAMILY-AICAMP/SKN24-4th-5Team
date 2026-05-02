@@ -156,7 +156,7 @@
                 max_q: mode === "practice" ? practiceQuestionCount.value : null,
                 profile_context: "",
                 history: [],
-                is_over: False,
+                is_over: false,
                 user_answer: "",
                 current_question: "",
                 // audio_base64: str | None = None
@@ -271,8 +271,7 @@
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
         try {
-            // Show a loading state if you have one
-            console.log("Processing PDF... Please wait.");  //todo:eraselater
+            // console.log("Processing PDF... Please wait.");  
 
             // 3. Send to Django
             const response = await fetch("/service/extract-pdf/", { // Change to your actual URL
@@ -284,7 +283,7 @@
             const data = await response.json();
 
             if (data.status === "success") {
-                console.log("PDF file uploaded and text extracted!");//todo:eraselater
+                // console.log("PDF file uploaded and text extracted!"); 
                 // console.log("Extracted Content:", data.text);
                 profile_context = data.text
 
