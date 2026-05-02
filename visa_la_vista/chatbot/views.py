@@ -375,3 +375,57 @@ def interview_session_create(request):
         is_over: bool
         evaluation: str | None = None
     """
+
+
+
+
+"""
+################################################################
+SCHEMA.PY
+################################################################
+
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+
+InterviewMode = Literal["practice", "real"]
+
+
+# 장고와 FastAPI가 주고받는 질문/답변 한 쌍의 기록
+class HistoryItem(BaseModel):
+    question: str
+    answer: str = ""
+    audio: dict | None = None
+
+
+# 장고가 한 턴마다 FastAPI로 보내는 인터뷰 요청 데이터
+class VisaTurnRequest(BaseModel):
+    mode: InterviewMode
+    max_q: int | None = Field(default=None, ge=1)
+    profile_context: str = ""
+    history: list[HistoryItem] = Field(default_factory=list)
+    is_over: bool = False
+    user_answer: str | None = None
+    current_question: str | None = None
+    audio_base64: str | None = None
+    audio_mime: str | None = "audio/mpeg"
+    include_tts: bool = False
+
+
+# FastAPI가 장고에 돌려주는 실제 인터뷰 처리 결과
+class VisaTurnData(BaseModel):
+    mode: InterviewMode
+    question: str | None = None
+    question_audio_base64: str | None = None
+    answer_text: str | None = None
+    history: list[HistoryItem]
+    is_over: bool
+    evaluation: str | None = None
+
+
+# 모든 visa 인터뷰 응답을 감싸는 공통 응답 포맷
+class VisaTurnResponse(BaseModel):
+    success: bool = True
+    data: VisaTurnData
+"""
