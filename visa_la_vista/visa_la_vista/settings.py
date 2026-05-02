@@ -34,7 +34,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1'] #'elastic', 
+ALLOWED_HOSTS = ['54.116.27.11', '127.0.0.1'] 
 
 
 # Application definition
@@ -48,9 +48,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-    # 'rest_framework',
-    # 'drf_yasg',
-    # 'django_filters',
     'chatbot',
     'uauth', 
 ]
@@ -88,27 +85,13 @@ ASGI_APPLICATION = 'visa_la_vista.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-"""
-# RDS 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'rdsdb',
-        'USER': 'django',
-        'PASSWORD': os.getenv('LOCAL_RDSDB_PASSWORD'),
-        'HOST':'', #end point django-post.crw6u22w4deh.ap-northeast-2.rds.amazonaws.com
-        'PORT':'3306'
-    }
-}
-"""
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'serv1',
+        'NAME': 'visa_la_vista',
         'USER' : 'django',
-        'PASSWORD' : 'django', 
-        'HOST' : '127.0.0.1',
+        'PASSWORD' : os.getenv('LOCAL_RDSDB_PASSWORD'),
+        'HOST' : 'django-web.crw6u22w4deh.ap-northeast-2.rds.amazonaws.com',
         'PORT' : '3306',
         'OPTIONS': {
             'charset': 'utf8mb4',
@@ -211,7 +194,7 @@ REST_FRAMEWORK = {
 }
 
 # AWS key
-# AWS_ACCESS_KEY_ID=os.getenv("AWS_ACCESS_KEY_ID")
-# AWS_SECRET_ACCESS_KEY=os.getenv("AWS_SECRET_ACCESS_KEY")
-
+AWS_ACCESS_KEY_ID=os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY=os.getenv("AWS_SECRET_ACCESS_KEY")
+CSRF_TRUSTED_ORIGINS = ['http://54.116.27.11'] 
 

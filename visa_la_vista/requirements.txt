@@ -47,3 +47,4 @@ jmespath==1.1.0
 python-dateutil==2.9.0
 s3transfer==0.16.1
 six==1.17.0
+daphne==4.2.1
