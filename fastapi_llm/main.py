@@ -24,6 +24,9 @@ from service.admission.api import chat
 from service.visa.api.mock import router as mock_router
 from service.visa.api.practice import router as practice_router
 
+
+
+
 app = FastAPI(title="Service Gateway")
 
 app.add_middleware(
