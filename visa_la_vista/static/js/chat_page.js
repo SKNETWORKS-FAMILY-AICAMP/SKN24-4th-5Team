@@ -98,30 +98,30 @@
     // =========================
     // CONVERSATIONS (기존 UI 유지 + 제목 sync)
     // =========================
-function renderConversations() {
-    conversationsList.innerHTML = "";
+    function renderConversations() {
+        conversationsList.innerHTML = "";
 
-    // 최신순 정렬
-    const sorted = [...conversations].sort((a, b) => {
-        const aTime = a.messages?.length ? new Date(a.messages[a.messages.length-1].timestamp) : 0;
-        const bTime = b.messages?.length ? new Date(b.messages[b.messages.length-1].timestamp) : 0;
-        return bTime - aTime;
-    });
+        // 최신순 정렬
+        const sorted = [...conversations].sort((a, b) => {
+            const aTime = a.messages?.length ? new Date(a.messages[a.messages.length - 1].timestamp) : 0;
+            const bTime = b.messages?.length ? new Date(b.messages[b.messages.length - 1].timestamp) : 0;
+            return bTime - aTime;
+        });
 
-    const groups = [...new Set(sorted.map(c => c.group || "오늘"))];
+        const groups = [...new Set(sorted.map(c => c.group || "오늘"))];
 
-    groups.forEach((group) => {
-        const groupEl = document.createElement("div");
-        groupEl.className = "conversation-group";
-        groupEl.innerHTML = `<p class="conversation-group-title">${group}</p>`;
+        groups.forEach((group) => {
+            const groupEl = document.createElement("div");
+            groupEl.className = "conversation-group";
+            groupEl.innerHTML = `<p class="conversation-group-title">${group}</p>`;
 
-      sorted
-    .filter(c => (c.group || "오늘") === group)
-    .forEach((conv) => {
-        const item = document.createElement("div");
-        item.style.cssText = "display:flex; align-items:center; width:100%; margin:0; padding:0;";
+            sorted
+                .filter(c => (c.group || "오늘") === group)
+                .forEach((conv) => {
+                    const item = document.createElement("div");
+                    item.style.cssText = "display:flex; align-items:center; width:100%; margin:0; padding:0;";
 
-        item.innerHTML = `
+                    item.innerHTML = `
             <button type="button"
                 class="conversation-btn ${conv.id === activeConversation ? "active" : ""}"
                 data-conversation-id="${conv.id}"
@@ -133,18 +133,21 @@ function renderConversations() {
             <button type="button"
                 class="conversation-delete-btn"
                 data-delete-conversation-id="${conv.id}">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
             </button>
         `;
 
-        groupEl.appendChild(item);
-    });
+                    groupEl.appendChild(item);
+                });
 
-        conversationsList.appendChild(groupEl);
-    });
+            conversationsList.appendChild(groupEl);
+        });
 
-    const active = conversations.find(c => c.id === activeConversation);
-    if (active) chatTitleDisplay.innerText = active.title || "새 채팅";
-}
+        const active = conversations.find(c => c.id === activeConversation);
+        if (active) chatTitleDisplay.innerText = active.title || "새 채팅";
+    }
     // =========================
     // SWITCH CHAT (🔥 핵심 수정)
     // =========================
@@ -175,106 +178,106 @@ function renderConversations() {
     // =========================
     // DELETE
     // =========================
-async function deleteConversation(id) {
-    await fetch(`/service/api/chat/conversations/${id}/delete`, {
-        method: "POST",
-        headers: { "X-CSRFToken": getCsrfToken() },
-    });
+    async function deleteConversation(id) {
+        await fetch(`/service/api/chat/conversations/${id}/delete`, {
+            method: "POST",
+            headers: { "X-CSRFToken": getCsrfToken() },
+        });
 
-    const isActive = activeConversation === id;
-    conversations = conversations.filter(c => c.id !== id);
+        const isActive = activeConversation === id;
+        conversations = conversations.filter(c => c.id !== id);
 
-    if (!conversations.length) {
-        startNewChat();
-        return;
+        if (!conversations.length) {
+            startNewChat();
+            return;
+        }
+
+        if (isActive) {
+            setActiveConversation(conversations[0].id);
+        } else {
+            renderConversations();
+        }
     }
-
-    if (isActive) {
-        setActiveConversation(conversations[0].id);
-    } else {
-        renderConversations();
-    }
-}
 
     // =========================
     // SEND (스트리밍 유지)
     // =========================
     async function sendMessage(content) {
-    if (!content.trim()) return;
-    if (controller) controller.abort();
-    controller = new AbortController();
+        if (!content.trim()) return;
+        if (controller) controller.abort();
+        controller = new AbortController();
 
-    messages.push({
-        id: Date.now().toString(),
-        role: "user",
-        content,
-        timestamp: new Date(),
-    });
+        messages.push({
+            id: Date.now().toString(),
+            role: "user",
+            content,
+            timestamp: new Date(),
+        });
 
-    let assistantMsg = { id: "stream", role: "assistant", content: "", timestamp: new Date() };
-    messages.push(assistantMsg);
-    renderMessages();
-    messageInput.value = "";
+        let assistantMsg = { id: "stream", role: "assistant", content: "", timestamp: new Date() };
+        messages.push(assistantMsg);
+        renderMessages();
+        messageInput.value = "";
 
-    const res = await fetch(chatMessageUrl, {
-        method: "POST",
-        signal: controller.signal,
-        headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
-        body: JSON.stringify({ conversation_id: activeConversation, content }),
-    });
+        const res = await fetch(chatMessageUrl, {
+            method: "POST",
+            signal: controller.signal,
+            headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrfToken() },
+            body: JSON.stringify({ conversation_id: activeConversation, content }),
+        });
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let full = "";
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let full = "";
 
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
+            const chunk = decoder.decode(value, { stream: true });
 
-        for (let line of chunk.split("\n")) {
-            if (!line.startsWith("data:")) continue;
-            const data = line.replace("data:", "").trim();
-            if (data === "[DONE]") break;
+            for (let line of chunk.split("\n")) {
+                if (!line.startsWith("data:")) continue;
+                const data = line.replace("data:", "").trim();
+                if (data === "[DONE]") break;
 
-            try {
-                const json = JSON.parse(data);
+                try {
+                    const json = JSON.parse(data);
 
-                // 대화방 메타 정보 처리
-                if (json.type === "meta") {
-                    const existingConv = conversations.find(c => c.id === json.conversation_id);
-                    if (!existingConv) {
-                        conversations.unshift({
-                            id: json.conversation_id,
-                            title: json.title,
-                            group: json.group || "오늘",
-                            messages: [],
-                        });
+                    // 대화방 메타 정보 처리
+                    if (json.type === "meta") {
+                        const existingConv = conversations.find(c => c.id === json.conversation_id);
+                        if (!existingConv) {
+                            conversations.unshift({
+                                id: json.conversation_id,
+                                title: json.title,
+                                group: json.group || "오늘",
+                                messages: [],
+                            });
+                        }
+                        activeConversation = json.conversation_id;
+                        renderConversations();
+                        continue;
                     }
-                    activeConversation = json.conversation_id;
-                    renderConversations();
-                    continue;
-                }
 
-                // LLM 토큰 처리
-                if (json.token) {
-                    full += json.token;
-                    assistantMsg.content = full;
-                    renderMessages();
-                }
-            } catch (e) {}
+                    // LLM 토큰 처리
+                    if (json.token) {
+                        full += json.token;
+                        assistantMsg.content = full;
+                        renderMessages();
+                    }
+                } catch (e) { }
+            }
         }
-    }
 
-    // 대화방 메시지 업데이트
-    const conv = conversations.find(c => c.id === activeConversation);
-    if (conv) {
-        if (conv.title === "새 채팅") conv.title = content.slice(0, 40);
-        conv.messages = [...messages];
+        // 대화방 메시지 업데이트
+        const conv = conversations.find(c => c.id === activeConversation);
+        if (conv) {
+            if (conv.title === "새 채팅") conv.title = content.slice(0, 40);
+            conv.messages = [...messages];
+        }
+        renderConversations();
     }
-    renderConversations();
-}
 
     // =========================
     // NEW CHAT

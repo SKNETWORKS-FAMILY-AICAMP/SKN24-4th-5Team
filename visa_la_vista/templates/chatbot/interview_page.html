@@ -8,7 +8,8 @@
 {% endblock %}
 
 {% block content %}
-<div id="interview-page" data-assistant-icon="{% static 'images/icon.png' %}" data-interview-session-url="{% url 'interview_session_create' %}">
+<div id="interview-page" data-assistant-icon="{% static 'images/icon.png' %}"
+    data-interview-session-url="{% url 'interview_session_create' %}">
     <aside class="interview-sidebar" aria-label="비자 모의 인터뷰 메뉴">
         <h2 class="interview-sidebar__title">비자 모의 인터뷰</h2>
 
@@ -31,14 +32,18 @@
                     </svg>
                 </div>
 
-                <button class="interview-control interview-control--outline" type="button" id="practice-start-btn">시작</button>
-                <button class="interview-control interview-control--primary" type="button" data-end-interview>종료</button>
+                <button class="interview-control interview-control--outline" type="button"
+                    id="practice-start-btn">시작</button>
+                <button class="interview-control interview-control--primary" type="button"
+                    data-end-interview>종료</button>
             </div>
 
             <div class="mode-panel" data-sidebar-panel="real">
                 <div class="timer-display" id="real-timer">07 : 00</div>
-                <button class="interview-control interview-control--outline" type="button" id="real-start-btn">시작</button>
-                <button class="interview-control interview-control--primary" type="button" data-end-interview>종료</button>
+                <button class="interview-control interview-control--outline" type="button"
+                    id="real-start-btn">시작</button>
+                <button class="interview-control interview-control--primary" type="button"
+                    data-end-interview>종료</button>
             </div>
         </div>
     </aside>
@@ -69,7 +74,8 @@
                             <img src="{% static 'images/interview.png' %}" alt="">
                         </div>
                         <div class="interview-message interview-message--question">
-                            <span id="practice-question-text">Hello! I'm here to help you. What would you like to talk about today?</span>
+                            <span id="practice-question-text">Hello! I'm here to help you. What would you like to talk
+                                about today?</span>
                             <span class="interview-message__time">11:29 AM</span>
                         </div>
                         <button class="question-audio-button" type="button" aria-label="질문 음성 듣기">
@@ -128,9 +134,11 @@
         </div>
     </section>
 
-    <div class="upload-modal-backdrop hidden" id="upload-modal" role="dialog" aria-modal="true" aria-labelledby="upload-modal-title">
+    <div class="upload-modal-backdrop hidden" id="upload-modal" role="dialog" aria-modal="true"
+        aria-labelledby="upload-modal-title">
         <form class="upload-card upload-modal" id="interview-upload-form">
-            <button class="upload-modal-close" type="button" id="upload-modal-close" aria-label="비자 지원서 업로드 창 닫기">&times;</button>
+            <button class="upload-modal-close" type="button" id="upload-modal-close"
+                aria-label="비자 지원서 업로드 창 닫기">&times;</button>
             <h2 id="upload-modal-title">비자 지원서 업로드</h2>
             <p>파일 크기는 최대 5MB까지, 파일 개수는 1개만 가능합니다.</p>
 

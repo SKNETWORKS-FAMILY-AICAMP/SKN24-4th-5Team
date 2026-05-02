@@ -1,5 +1,6 @@
 (function () {
     "use strict";
+    var profile_context = ""
 
     const interviewPage = document.getElementById("interview-page");
     const pageData = JSON.parse(document.getElementById("interview-page-data").textContent);
@@ -130,7 +131,18 @@
             realQuestionLine.textContent = question.text;
         }
     }
-
+    // FASTAPI: send msg  
+    // class VisaTurnRequest(BaseModel):
+    // mode: InterviewMode
+    // max_q: int | None = Field(default=None, ge=1)
+    // profile_context: str = ""
+    // history: list[HistoryItem] = Field(default_factory=list)
+    // is_over: bool = False
+    // user_answer: str | None = None
+    // current_question: str | None = None
+    // audio_base64: str | None = None
+    // audio_mime: str | None = "audio/mpeg"
+    // include_tts: bool = False
     function createInterviewSession(mode) {
         return fetch(interviewSessionUrl, {
             method: "POST",
@@ -141,14 +153,22 @@
             body: JSON.stringify({
                 mode: mode,
                 uploaded_file_name: uploadedFile ? uploadedFile.name : "",
-                question_count: mode === "practice" ? practiceQuestionCount.value : null,
+                max_q: mode === "practice" ? practiceQuestionCount.value : null,
+                profile_context: "",
+                history: [],
+                is_over: False,
+                user_answer: "",
+                current_question: "",
+                // audio_base64: str | None = None
+                // audio_mime: str | None = "audio/mpeg"
+                // include_tts: bool = False
             }),
         }).then((response) => (response.ok ? response.json() : Promise.reject(response)));
     }
 
     function validateFile(file) {
         if (!file) {
-            alert("PDF파일을 업로드해주세요");
+            alert("PDF파일을 업로드해주세요 herehrehrehrehrehrhehehre");
             return false;
         }
 
@@ -165,6 +185,7 @@
         return true;
     }
 
+    // ---------- PDF 업로드 함수
     function setUploadedFile(file) {
         if (!validateFile(file)) {
             fileInput.value = "";
@@ -231,22 +252,77 @@
         setUploadedFile(files[0]);
     });
 
-    uploadForm.addEventListener("submit", (event) => {
+
+
+    // NEW FUNCTION 
+    uploadForm.addEventListener("submit", async (event) => {
         event.preventDefault();
 
         if (!uploadedFile) {
-            alert("PDF파일을 업로드해주세요");
+            alert("PDF파일을 업로드해주세요!");
             return;
         }
 
-        uploadCompleted = true;
-        closeUploadModal();
-        setMode("practice");
-        showPanel("sidebar", "select");
-        showPanel("stage", "select");
+        // 1. Prepare data for the server
+        const formData = new FormData();
+        formData.append("pdf_file", uploadedFile);
+
+        // 2. Get CSRF Token (Required for Django POST requests)
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        try {
+            // Show a loading state if you have one
+            console.log("Processing PDF... Please wait.");  //todo:eraselater
+
+            // 3. Send to Django
+            const response = await fetch("/service/extract-pdf/", { // Change to your actual URL
+                method: "POST",
+                body: formData,
+                headers: { "X-CSRFToken": csrftoken }
+            });
+
+            const data = await response.json();
+
+            if (data.status === "success") {
+                console.log("PDF file uploaded and text extracted!");//todo:eraselater
+                // console.log("Extracted Content:", data.text);
+                profile_context = data.text
+
+                // 4. Continue your UI flow
+                uploadCompleted = true;
+                closeUploadModal();
+                setMode("practice");
+                showPanel("sidebar", "select");
+                showPanel("stage", "select");
+            } else {
+                alert("Extraction failed: " + data.message);
+            }
+        } catch (error) {
+            console.error("Error connecting to server:", error);
+            alert("Server error occurred.");
+        }
     });
 
+
+
+    // ORIGINAL 
+    // uploadForm.addEventListener("submit", (event) => {
+    //     event.preventDefault();
+
+    //     if (!uploadedFile) {
+    //         alert("PDF파일을 업로드해주세요 WHYWHYWHWYHWYWHYW");
+    //         return;
+    //     }
+    //     uploadCompleted = true;
+    //     alert("PDF file uploaded! _extract_text_flattened_pdf function here")
+    //     closeUploadModal();
+    //     setMode("practice");
+    //     showPanel("sidebar", "select");
+    //     showPanel("stage", "select");
+    // });
+
     practiceStartBtn.addEventListener("click", () => {
+        // console.log("profile_context:" + profile_context);
         if (!practiceQuestionCount.value) {
             alert("질문 개수를 선택해주세요");
             return;
@@ -256,6 +332,7 @@
         createInterviewSession("practice")
             .then((data) => {
                 if (data.question) {
+                    alert("practiceStartBtn!!") //todo:fastapi request
                     document.getElementById("practice-question-text").textContent = data.question.text;
                 }
             })
@@ -272,6 +349,7 @@
             .then((data) => {
                 if (data.question) {
                     realQuestionLine.textContent = data.question.text;
+                    alert("createInterviewSession!")
                 }
 
                 window.clearInterval(realTimerId);

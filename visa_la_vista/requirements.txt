@@ -48,3 +48,7 @@ python-dateutil==2.9.0
 s3transfer==0.16.1
 six==1.17.0
 daphne==4.2.1
+pillow==12.2.0
+pytesseract==0.3.13
+pdf2image==1.17.0
+langchain_community==0.4.1
