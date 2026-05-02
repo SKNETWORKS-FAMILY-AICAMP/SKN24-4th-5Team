@@ -1,45 +1,23 @@
-"""프로젝트 전역 설정"""
+﻿from pathlib import Path
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
+# Settings used by the visa interview service.
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-# ==== 경로 설정 ===========================
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    OLLAMA_MODEL: str = "ebdm/gemma3-enhanced:12b"
+    LLM_TEMPERATURE: float = 0.5
+    INTERVIEW_DURATION_SECONDS: int = 7 * 60
+    MAX_REPLAY: int = 1
 
-# STT 모델 경로
-STT_MODEL_PATH = os.path.join(BASE_DIR, "model_stt", "vosk-model-small-en-us-0.15")
+    BASE_DIR: Path = Path(__file__).resolve().parents[3]
+    VISA_DIR: Path = BASE_DIR / "service" / "visa"
+    CHROMA_DIR: Path = VISA_DIR / "chroma_db"
+    CHROMA_COLLECTION: str = "s2_interview_data"
+    EMBEDDING_MODEL: str = "BAAI/bge-m3"
+    HF_VISA_DATASET: str = "Blessing988/f1_visa_transcripts"
+    VOSK_MODEL_DIR: Path = VISA_DIR / "model_stt" / "vosk-model-small-en-us-0.15"
 
-# TTS 모델 경로
-TTS_EXE_PATH   = os.path.join(BASE_DIR, "model_tts", "piper", "piper.exe")
-TTS_MODEL_PATH = os.path.join(BASE_DIR, "model_tts", "piper", "en_US-lessac-medium.onnx")
 
-# 폰트 경로
-FONT_PATH = os.path.join(BASE_DIR, "fonts", "NanumGothic.ttf")
-
-# ChromaDB 저장 경로
-CHROMA_DB_PATH = os.path.join(BASE_DIR, "chroma_db")
-
-# ====LLM 설정 ===========================
-LLM_MODEL      = "ebdm/gemma3-enhanced:12b"
-LLM_TEMPERATURE = 0.5
-
-# ==== Embedding 설정====================
-EMBED_MODEL_NAME   = "BAAI/bge-m3"
-EMBED_DEVICE       = "cpu"          # GPU 사용 시 "cuda"
-
-# ==== ChromaDB 설정 ===========================
-CHROMA_COLLECTION  = "s2_interview_data"
-
-# ==== 인터뷰 설정 ===========================
-REAL_MODE_TIMER_SEC = 420           # 실전모드 타이머 (7분)
-AUTO_START_DELAY_SEC = 5            # 실전모드 자동 녹음 대기 시간
-
-# ==== 음성 녹음 설정 ===========================
-AUDIO_SAMPLE_RATE = 16000           # Hz
-AUDIO_CHANNELS    = 1
-AUDIO_FILENAME    = "speech.wav"
-
-# ==== PDF 설정 ===========================
-MAX_PDF_SIZE_MB   = 5
+settings = Settings()
