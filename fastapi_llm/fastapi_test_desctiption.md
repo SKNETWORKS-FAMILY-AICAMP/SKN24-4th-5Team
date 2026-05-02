@@ -74,3 +74,10 @@ Step 3: 브라우저 (API 호출)
     Django DB(ChatMessage 모델)에 질문과 답변을 저장함.
 
     사용자에게 최종 응답 반환.
+
+
+# tree확인
+    tree /f C:\Users\Playdata\Downloads\web_visa_interview_helper\fastapi_llm
+
+    
+conda install -c conda-forge poppler
