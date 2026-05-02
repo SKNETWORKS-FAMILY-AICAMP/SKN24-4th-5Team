@@ -35,7 +35,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-from config.settings import (
+from service.visa.config.settings import (
     LLM_MODEL, LLM_TEMPERATURE,
     EMBED_MODEL_NAME, EMBED_DEVICE,
     CHROMA_COLLECTION, CHROMA_DB_PATH,

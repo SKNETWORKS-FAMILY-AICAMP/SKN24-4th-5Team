@@ -21,6 +21,8 @@ django.setup()
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from service.admission.api import chat
+from service.visa.api.mock import router as mock_router
+from service.visa.api.practice import router as practice_router
 
 app = FastAPI(title="Service Gateway")
 
@@ -33,7 +35,12 @@ app.add_middleware(
 )
 
 app.include_router(chat.router, prefix="/admission")
+app.include_router(mock_router,     prefix="/visa")
+app.include_router(practice_router, prefix="/visa")
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+#pip install python-multipart
