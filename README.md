@@ -51,7 +51,7 @@
   <img 
     src="https://github.com/user-attachments/assets/27df7eed-77cd-43d0-af65-c969b6b9d465" 
     alt="홈페이지 메인" 
-    style="max-width: 60%; height: auto; display: inline-block;" 
+    style="max-width: 30%; height: auto; display: inline-block;" 
   />
 </div>
 
