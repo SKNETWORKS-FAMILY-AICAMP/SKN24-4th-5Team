@@ -1,5 +1,5 @@
 from langgraph.graph import MessagesState
-from langchain_core.messages import AIMessage, ToolMessage, SystemMessage
+from langchain_core.messages import AIMessage, ToolMessage, SystemMessage, HumanMessage
 from ..sqltool_llm.tools_llm import build_tools_and_llm
 from typing import Dict, Any
 from ..prompts import (
@@ -93,57 +93,129 @@ def retry_query(state: MessagesState):
 
 #     return {'messages': [response]}
 
-
 def generate_answer(state: MessagesState):
     llm, _ = build_tools_and_llm()
-
+    
+    messages = state["messages"]
+    
+    last_human = next(
+        (m for m in reversed(messages) if isinstance(m, HumanMessage)),
+        None
+    )
+    
+    # 웹 검색 결과가 있는 경우 (web_search_node → generate_answer 경로)
+    if last_human and "검색 결과" in last_human.content:
+        response = llm.invoke(last_human.content)
+        return {"messages": [AIMessage(content=response.content)]}
+    
     tool_results = [
-        msg.content for msg in state["messages"]
+        msg.content for msg in messages
         if isinstance(msg, ToolMessage)
     ]
-
     context = "\n".join(tool_results)
-
+    
+    question = next(
+        m.content for m in reversed(messages)
+        if isinstance(m, HumanMessage)
+    )
+    
     prompt = f"""
 {generate_answer_system_prompt}
-
 다음 DB 조회 결과를 바탕으로 질문에 답하세요:
-
 {context}
+
+질문: {question}
 """
+    response = llm.invoke(prompt)
+    return {"messages": [AIMessage(content=response.content)]}
 
-    question = state["messages"][0].content
+# def generate_answer(state: MessagesState):
+#     llm, _ = build_tools_and_llm()
 
-    response = llm.invoke(prompt + f"\n\n질문: {question}")
+#     tool_results = [
+#         msg.content for msg in state["messages"]
+#         if isinstance(msg, ToolMessage)
+#     ]
 
-    return {
-        "messages": [AIMessage(content=response.content)]
-    }
+#     context = "\n".join(tool_results)
+
+#     prompt = f"""
+# {generate_answer_system_prompt}
+
+# 다음 DB 조회 결과를 바탕으로 질문에 답하세요:
+
+# {context}
+# """
+
+#     question = state["messages"][0].content
+
+#     response = llm.invoke(prompt + f"\n\n질문: {question}")
+
+#     return {
+#         "messages": [AIMessage(content=response.content)]
+#     }
 
 
 search = DuckDuckGoSearchRun()
 
-def web_search_node(state: MessagesState):
-    # 첫 번째 메시지(사용자 질문)에서 대학 이름을 추출하는 로직이 있다고 가정
-    user_query = state["messages"][0].content
+# def web_search_node(state: MessagesState):
+#     # 첫 번째 메시지(사용자 질문)에서 대학 이름을 추출하는 로직이 있다고 가정
+#     user_query = state["messages"][0].content
     
-    # 검색 쿼리 예시: "상하이 대학교" official admission website URL -SJTU
-    # 검색 결과에서 다른 유명 대학(SJTU 등)을 제외하는 연산자(-)를 동적으로 붙일 수도 있습니다.
-    search_query = f'"{user_query}" official international admission website URL'
+#     # 검색 쿼리 예시: "상하이 대학교" official admission website URL -SJTU
+#     # 검색 결과에서 다른 유명 대학(SJTU 등)을 제외하는 연산자(-)를 동적으로 붙일 수도 있습니다.
+#     search_query = f'"{user_query}" official international admission website URL'
+    
+#     print(f"--- [범용 검색 실행] ---: {search_query}")
+#     search_result = search.run(search_query)
+    
+#     return {
+#         "messages": [
+#             ("system", f"""
+#             CRITICAL INSTRUCTION: 
+#             1. 당신은 현재 '{user_query}'에 대한 정보만 찾아야 합니다.
+#             2. 아래 검색 결과 중 학교 이름이 '{user_query}'와 100% 일치하지 않는 데이터(예: 하버드, 교통대 등)는 절대 답변에 포함하지 마세요.
+#             3. 만약 모든 결과가 일치하지 않는다면 "죄송하지만 요청하신 대학의 공식 정보를 찾지 못했습니다"라고 답변하세요.
+            
+#             [검색 결과]:
+#             {search_result}
+#             """)
+#         ]
+#     }
+
+
+def web_search_node(state: MessagesState):
+    user_query = next(
+        m.content for m in reversed(state["messages"])
+        if m.type == "human"
+    )
+
+    search_query = f'"{user_query}" admission tuition requirements deadline scholarship international students'
     
     print(f"--- [범용 검색 실행] ---: {search_query}")
     search_result = search.run(search_query)
-    
+
+    grounded_prompt = f"""
+사용자가 '{user_query}'에 대해 질문했습니다.
+아래는 웹 검색 결과입니다.
+
+[검색 결과]
+{search_result}
+
+---
+위 검색 결과를 바탕으로 답변할 때 반드시 아래 규칙을 따르세요:
+
+1. 반드시 '{user_query}'에 대한 정보만 사용하세요.
+2. 검색 결과에서 '{user_query}'와 다른 대학 정보(예: NYU, 하버드, 교통대 등)는 절대 사용하지 마세요.
+3. '{user_query}' 정보가 검색 결과에 없으면 "해당 대학의 공식 정보를 찾지 못했습니다. 아래 공식 사이트를 직접 확인해주세요." 라고만 답하세요.
+4. 답변 가능한 경우 아래 항목을 포함하세요:
+   - 학비 (학부/대학원)
+   - 지원 요건 (영어성적, 학점 등)
+   - 지원 마감일
+   - 장학금 정보
+   - 공식 입학처 링크
+5. 정보가 불확실하면 "공식 사이트에서 확인을 권장합니다"라고 명시하세요.
+"""
     return {
-        "messages": [
-            ("system", f"""
-            CRITICAL INSTRUCTION: 
-            1. 당신은 현재 '{user_query}'에 대한 정보만 찾아야 합니다.
-            2. 아래 검색 결과 중 학교 이름이 '{user_query}'와 100% 일치하지 않는 데이터(예: 하버드, 교통대 등)는 절대 답변에 포함하지 마세요.
-            3. 만약 모든 결과가 일치하지 않는다면 "죄송하지만 요청하신 대학의 공식 정보를 찾지 못했습니다"라고 답변하세요.
-            
-            [검색 결과]:
-            {search_result}
-            """)
-        ]
+        "messages": [HumanMessage(content=grounded_prompt)]
     }

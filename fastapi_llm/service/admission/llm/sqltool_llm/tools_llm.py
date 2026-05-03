@@ -16,8 +16,8 @@ def build_tools_and_llm():
     db = get_db()
 
     llm = ChatOllama(
-        # model="ebdm/gemma3-enhanced:12b",
-        model="qwen2.5:3b",
+        model="ebdm/gemma3-enhanced:12b",
+        # model="qwen2.5:3b",
         temperature=0,
          num_predict=500
     )
