@@ -6,7 +6,10 @@ from fastapi_llm.service.visa.tts.gtts_tts import text_to_speech_base64
 from fastapi_llm.service.visa.utils.audio import analyze_audio_base64
 
 
+
 async def handle_interview_turn(payload: VisaTurnRequest) -> VisaTurnResponse:
+    print(f"[visa] mode={payload.mode}, answered={sum(1 for i in payload.history if i.answer.strip())}, max_q={payload.max_q}, is_over={payload.is_over}", flush=True)
+
     history = list(payload.history)
     answer_text = payload.user_answer
     audio_features = None

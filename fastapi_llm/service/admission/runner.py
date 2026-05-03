@@ -28,14 +28,15 @@ async def chat_v1_logic(agent_request: AgentRequest, http_request: Request):
     chat_id = agent_request.chat_id
     user_id = agent_request.user_id
 
-    # 1. 히스토리 읽기 (ChatMessage - FastAPI 전용)
     rows = await sync_to_async(list)(
         ChatMessage.objects
         .filter(chat_id=chat_id)
-        .order_by("created_at")[:HISTORY_LIMIT]
+        .order_by("-created_at")[:HISTORY_LIMIT]
     )
-
+    rows.reverse()  # ← 이 줄 추가
     history = [{"role": r.role, "content": r.content} for r in rows]
+    
+
 
     # 2. LLM 실행
     answer = await _run_llm(agent_request.question, history)
