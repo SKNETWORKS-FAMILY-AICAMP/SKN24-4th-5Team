@@ -44,7 +44,7 @@
 
 ##  **2.1 프로젝트 명 : `Viva la Vista`**
 
-로고 넣기
+<img width="1255" height="807" alt="홈페이지 메인" src="https://github.com/user-attachments/assets/27df7eed-77cd-43d0-af65-c969b6b9d465" />
   
 >  **“Viva la Vista!”** : 스페인어 '인생이여 만세(Viva la Vida)'에서 착안하여, **'성공적인 유학을 통해 펼쳐질 당신의 찬란한 앞날(Vista) 만세!'**라는 의미함
 
@@ -64,7 +64,7 @@
   
 	- 👉**단순 정보 탐색을 넘어 학위 취득과 비자 승인이라는 명확한 생존형 목적을 가진 '결과 중심의 학위 유학층'을 핵심 타겟으로 설정**
 
-![조기유학 감소](https://edumorning.com/storage/uploads/q2qOWQ3NH623rdJTcy8YRC2HQdWcrvOBjlO0TPaX.jpg)
+<img width="866" height="802" alt="해외 유학 필요성1" src="https://github.com/user-attachments/assets/2965af96-db4f-432d-8918-c7c0a3756076" />
 
 사진1(뉴스 기사)
 https://edumorning.com/articles/1029
@@ -80,25 +80,27 @@ https://www.topdigital.com.au/news/articleView.html?idxno=30560
 
 
 ###  **<h3> 3. 학생비자 거부율 35%, 10년 내 최고치,  “미국 유학 장벽 현실화”** </h3>
-*   트럼프 행정부 심사 강화 여파로 국제교육업체 쇼어라이트(Shorelight) 분석 결과, 2025년 **F-1(유학생) 비자 거부율은 35%로 집계**됐다. 이는 2024년 31%에서 상승한 수치로, 2015년 이후 10년간 가장 높은 수준인 것을 확인 할 수 있음 👉 **실제 영사와의 인터뷰 환경을 완벽히 재현하여 사용자에게 실질적인 대비책 필요**
+*   트럼프 행정부 심사 강화 여파로 국제교육업체 쇼어라이트(Shorelight) 분석 결과, 2025년 **F-1(유학생) 비자 거부율은 35%로 집계**됐다. 이는 2024년 31%에서 상승한 수치로, 2015년 이후 10년간 가장 높은 수준인 것을 확인 할 수 있음
+
+	*   👉 **실제 영사와의 인터뷰 환경을 완벽히 재현하여 사용자에게 실질적인 대비책 필요**
+
+<img width="1018" height="609" alt="비자거절" src="https://github.com/user-attachments/assets/00d4cda1-f71a-4f4b-b812-077d6bfb031c" />
 
 
 https://knewsla.com/usa/20260415110110/
 https://www.vietnam.vn/ko/ty-le-truot-visa-du-hoc-my-cao-nhat-10-nam
 https://www.vietnam.vn/ko/ty-le-truot-visa-du-hoc-uc-cao-nhat-trong-hai-thap-nien
-![Tỷ lệ trượt visa du học Mỹ cao nhất 10 năm - Ảnh 1.](https://vstatic.vietnam.vn/vietnam/resource/IMAGE/2026/04/16/1776333309240_ty-le-tu-choi-visa-du-hoc-my-2025-177630997872062448217.jpeg)
 
 ###  **<h3> 4. 실용적 유학 트렌드와 대안 탐색 확대** </h3>
 
 *   단순히 '타이틀'을 쫓던 과거와 달리, 예산 내에서 실리를 찾는 '실용 유학'과 미국 외 대안 국가의 대학교를 찾는 수요가 늘고 있습니다.
   
-    *   👉 **수십 개의 유학원에 파편화된 정보를 일일이 대조하는 대신, 사용자의 조건에 최적화된 국가별·학교별 대안을 객관적으로 답변해 주는 데이터 기반 플랫폼이 반드시 필요**
+    *   👉 **수십 개의 유학원에 파편화된 정보를 일일이 대조하는 대신, 사용자의 조건에 최적화된 국가별·학교별 대안을 객관적으로 답변해 주는 데이터 기반 플랫폼이 필요**
     
+<img width="600" height="600" alt="유학 그래프1" src="https://github.com/user-attachments/assets/16828331-d4b7-46c9-b4ff-6ea837a867de" />
+
 https://www.naeil.com/news/read/556332?ref=naver
 
-![](https://wimg.naeil.com/paper/2025/07/30/20250730_01100118000001_L01.jpg)
-
-</br>
 
 ##  **2.4 프로젝트 목표**
 
