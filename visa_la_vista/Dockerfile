@@ -6,11 +6,11 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /code
 
 # --- NEW SECTION: Install System Dependencies ---
-# We do this before pip install so that system tools are ready
 RUN apt-get update && apt-get install -y \
     poppler-utils \
     tesseract-ocr \
-    libgl1-mesa-glx \
+    libgl1 \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 # -----------------------------------------------
 
