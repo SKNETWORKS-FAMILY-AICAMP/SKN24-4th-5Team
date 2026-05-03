@@ -69,6 +69,7 @@
   <img src="https://github.com/user-attachments/assets/2965af96-db4f-432d-8918-c7c0a3756076"  width="400"/>
 </p>
 
+[참조]([[https://knewsla.com/usa/20260415110110/](https://knewsla.com/usa/20260415110110/)](https://edumorning.com/articles/1029))
 
 
 사진1(뉴스 기사)
@@ -83,8 +84,9 @@ https://edumorning.com/articles/1029
   <img src="[https://github.com/user-attachments/assets/2965af96-db4f-432d-8918-c7c0a3756076](https://cdn.topdigital.com.au/news/photo/202604/30560_50951_250.jpg)"  width="400"/>
 </p>
 
+[참조]([https://knewsla.com/usa/20260415110110/](https://www.topdigital.com.au/news/articleView.html?idxno=30560))
 
-https://www.topdigital.com.au/news/articleView.html?idxno=30560
+
 
 
 ###  **<h3> 3. 학생비자 거부율 35%, 10년 내 최고치,  “미국 유학 장벽 현실화”** </h3>
@@ -97,6 +99,7 @@ https://www.topdigital.com.au/news/articleView.html?idxno=30560
   <img src="https://github.com/user-attachments/assets/00d4cda1-f71a-4f4b-b812-077d6bfb031c" width="400"/>
 </p>
 
+[참조]([https://knewsla.com/usa/20260415110110/](https://knewsla.com/usa/20260415110110/))
 
 
 https://knewsla.com/usa/20260415110110/
@@ -109,10 +112,9 @@ https://www.vietnam.vn/ko/ty-le-truot-visa-du-hoc-uc-cao-nhat-trong-hai-thap-nie
   
     *   👉 **수십 개의 유학원에 파편화된 정보를 일일이 대조하는 대신, 사용자의 조건에 최적화된 국가별·학교별 대안을 객관적으로 답변해 주는 데이터 기반 플랫폼이 필요**
     
-<img width="860" height="410" alt="해외 유학성 추이" src="https://github.com/user-attachments/assets/5b8403dc-b3a7-4818-90f1-07a2f7e7ea3c" />
+<img width="860" height="410" alt="해외 유학성 추이" src="https://github.com/user-attachments/assets/5b8403dc-b3a7-4818-90f1-07a2f7e7ea3c"  width="400"/>
 
-
-https://www.naeil.com/news/read/556332?ref=naver
+[참조]([https://www.naeil.com/news/read/556332?ref=naver](https://www.naeil.com/news/read/556332?ref=naver))
 
 
 ##  **2.4 프로젝트 목표**
