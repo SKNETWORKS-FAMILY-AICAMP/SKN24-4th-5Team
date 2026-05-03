@@ -72,6 +72,7 @@
 [참조]([[https://knewsla.com/usa/20260415110110/](https://knewsla.com/usa/20260415110110/)](https://edumorning.com/articles/1029))
 
 
+
 사진1(뉴스 기사)
 https://edumorning.com/articles/1029
 
@@ -89,6 +90,7 @@ https://edumorning.com/articles/1029
 
 
 
+
 ###  **<h3> 3. 학생비자 거부율 35%, 10년 내 최고치,  “미국 유학 장벽 현실화”** </h3>
 *   트럼프 행정부 심사 강화 여파로 국제교육업체 쇼어라이트(Shorelight) 분석 결과, 2025년 **F-1(유학생) 비자 거부율은 35%로 집계**됐다. 이는 2024년 31%에서 상승한 수치로, 2015년 이후 10년간 가장 높은 수준인 것을 확인 할 수 있음
 
@@ -100,6 +102,7 @@ https://edumorning.com/articles/1029
 </p>
 
 [참조]([https://knewsla.com/usa/20260415110110/](https://knewsla.com/usa/20260415110110/))
+
 
 
 https://knewsla.com/usa/20260415110110/
@@ -115,6 +118,7 @@ https://www.vietnam.vn/ko/ty-le-truot-visa-du-hoc-uc-cao-nhat-trong-hai-thap-nie
 <img width="860" height="410" alt="해외 유학성 추이" src="https://github.com/user-attachments/assets/5b8403dc-b3a7-4818-90f1-07a2f7e7ea3c"  width="400"/>
 
 [참조]([https://www.naeil.com/news/read/556332?ref=naver](https://www.naeil.com/news/read/556332?ref=naver))
+
 
 
 ##  **2.4 프로젝트 목표**
