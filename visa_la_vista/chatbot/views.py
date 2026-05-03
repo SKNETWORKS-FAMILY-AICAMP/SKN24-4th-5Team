@@ -86,10 +86,8 @@ def _serialize_interview_page_data():
         'questionCounts': list(range(1, 11)),
     }
 
-
 def chat_list(request):
     return render(request, 'chatbot/chat_page.html', {'chat_page_data': _serialize_chat_page_data(request)})
-
 
 def interview_page(request):
     return render(request, 'chatbot/interview_page.html', {'interview_page_data': _serialize_interview_page_data()})
