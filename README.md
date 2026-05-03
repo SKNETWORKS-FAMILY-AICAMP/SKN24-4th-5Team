@@ -47,8 +47,13 @@
 >  **“Visa la Vista!”** : 스페인어 '인생이여 만세(Viva la Vida)'에서 착안하여, '성공적인 유학을 통해 펼쳐질 당신의 찬란한 앞날(Vista) 만세!'라는 의미함
 `비자 성공부터 글로벌 입시까지 아자아자!! ୧(⑅˃ᗜ˂⑅)୨ 응원합니다!`
 
-<img  alt="홈페이지 메인" src="https://github.com/user-attachments/assets/27df7eed-77cd-43d0-af65-c969b6b9d465" style="max-width: 80%; height: auto;" />
-
+<div style="text-align: center;">
+  <img 
+    src="https://github.com/user-attachments/assets/27df7eed-77cd-43d0-af65-c969b6b9d465" 
+    alt="홈페이지 메인" 
+    style="max-width: 60%; height: auto; display: inline-block;" 
+  />
+</div>
 
 ##  **2.2 프로젝트 소개**
  **전 세계 대학 입시 정보 챗봇**과 **AI 비자 인터뷰 시뮬레이션** 서비스 제공
