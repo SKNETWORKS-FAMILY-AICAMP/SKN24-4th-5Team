@@ -303,8 +303,9 @@ from django.http import StreamingHttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-FASTAPI_URL = "https://zbn0fwzba1ylfl-8000.proxy.runpod.net"
-API_SECRET_KEY = "66b15280d3145859f2e9e42bb8b41db32c85317ceaefba8144a33412cca50bbb"
+FASTAPI_URL = os.getenv("FASTAPI_URL")
+FASTAPI_SECRET_KEY = os.getenv("FASTAPI_SECRET_KEY")
+
 import base64
 
 @require_POST
@@ -367,7 +368,7 @@ async def interview_session_create(request):
             try:
                 async with client.stream(
                     "POST", target_url,
-                    headers={"x-api-key": API_SECRET_KEY},
+                    headers={"x-api-key": FASTAPI_SECRET_KEY},
                     json=payload,   # audio_base64 + audio_mime are inside here
                 ) as response:
                     print(f"[runpod] response status: {response.status_code}")
@@ -416,7 +417,7 @@ async def before_multipart_audio_interview_session_create(request):
                 async with client.stream(
                     "POST",
                     target_url,
-                    headers={"x-api-key": API_SECRET_KEY},
+                    headers={"x-api-key": FASTAPI_SECRET_KEY},
                     # This replicates requests' data= param (form field, not file)
                     # data={"payload": json.dumps(payload, ensure_ascii=False)},
                      json=payload,  
@@ -462,7 +463,7 @@ def original_interview_session_create(request):
             with client.stream(
                 "POST", f"{RUNPOT_URL}/run-agent",
                 headers={
-                    "x-api-key": API_SECRET_KEY,
+                    "x-api-key": FASTAPI_SECRET_KEY,
                     "Content-Type": "application/json"
                 },
                 json={
