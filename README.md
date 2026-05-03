@@ -107,10 +107,6 @@ https://edumorning.com/articles/1029
 </p>
 
 
-https://knewsla.com/usa/20260415110110/
-https://www.vietnam.vn/ko/ty-le-truot-visa-du-hoc-my-cao-nhat-10-nam
-https://www.vietnam.vn/ko/ty-le-truot-visa-du-hoc-uc-cao-nhat-trong-hai-thap-nien
-
 ###  **<h3> 4. 실용적 유학 트렌드와 대안 탐색 확대** </h3>
 
 *   단순히 '타이틀'을 쫓던 과거와 달리, 예산 내에서 실리를 찾는 '실용 유학'과 미국 외 대안 국가의 대학교를 찾는 수요가 늘고 있습니다.
