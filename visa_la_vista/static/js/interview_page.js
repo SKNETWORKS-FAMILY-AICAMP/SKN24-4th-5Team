@@ -35,7 +35,8 @@
     let isAnswerSubmitting = false;
     let isRealEvaluationRequesting = false;
     let hasRealEvaluation = false;
-    let remainingSeconds = 7 * 60;
+    // let remainingSeconds = 7 * 60;
+    let remainingSeconds = 2 * 60;
     let lastSessionData = null;
     let recorderState = null;
 
@@ -104,8 +105,8 @@
         realTimerId = null;
         realMicDelayId = null;
         realMicCountdownId = null;
-        remainingSeconds = 7 * 60;
-        realTimer.textContent = "07 : 00";
+        remainingSeconds = 2 * 60;
+        realTimer.textContent = "02 : 00";
         clearChat("practice");
         clearChat("real");
         lastSessionData = null;
@@ -629,7 +630,7 @@
         stopQuestionAudio();
         micButtons.forEach(resetMicButton);
         // remainingSeconds = 7 * 60;
-        remainingSeconds = 3 * 60;
+        remainingSeconds = 2 * 60;
         realTimer.textContent = formatTimer(remainingSeconds);
 
         const requestBody = {
@@ -932,7 +933,14 @@
                         data.data.question_audio_mime,
                     );
                 }
-                if (data.data.question && mode === "real" && !isOver && !data.data.is_over && !isRealFinishing && !hasRealEvaluation) {
+                if (
+                    data.data.question &&
+                    mode === "real" &&
+                    !isOver &&
+                    !data.data.is_over &&
+                    !isRealFinishing &&
+                    !hasRealEvaluation
+                ) {
                     const questionBubble = appendAudioQuestion(
                         mode,
                         data.data.question_audio_base64,

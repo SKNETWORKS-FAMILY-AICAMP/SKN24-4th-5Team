@@ -14,7 +14,7 @@
       <p class="hero-description">해외 대학 입시부터, 비자 인터뷰까지!</p>
       <h1 class="hero-title">VISA LA VISTA</h1>
       <div class="hero-buttons">
-        <a href="{% url 'chat' %}" class="btn btn-primary" data-nav="chat">
+        <a href="{% url 'chat' %}" class="btn btn-primary" data-nav="chat" {% if not user.is_authenticated %} data-login-required{% endif %}>
           <h2>
             🏫 입시 도우미
           </h2>
@@ -23,7 +23,7 @@
           </p>
         </a>
 
-        <a href="{% url 'interview' %}" class="btn btn-primary" data-nav="chat">
+        <a href="{% url 'interview' %}" class="btn btn-primary" data-nav="chat" {% if not user.is_authenticated %} data-login-required{% endif %}>
           <h2>🧐 비자 모의 인터뷰</h2>
           <p>
             실전처럼 준비하는 비자 인터뷰, 혼자서도 충분합니다. 연습 모드와 실전 모드로 상황에 맞게 대비하고, AI가 정보 일치성·영어 표현·유창성을 종합적으로 분석해 결과를 제공합니다.
