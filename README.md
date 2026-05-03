@@ -47,7 +47,7 @@
 >  **“Visa la Vista!”** : 스페인어 '인생이여 만세(Viva la Vida)'에서 착안하여, '성공적인 유학을 통해 펼쳐질 당신의 찬란한 앞날(Vista) 만세!'라는 의미함
 `비자 성공부터 글로벌 입시까지 아자아자!! ୧(⑅˃ᗜ˂⑅)୨ 응원합니다!`
 
-<img width="1255" height="807" alt="홈페이지 메인" src="https://github.com/user-attachments/assets/27df7eed-77cd-43d0-af65-c969b6b9d465" style="max-width: 80%; height: auto;" />
+<img  alt="홈페이지 메인" src="https://github.com/user-attachments/assets/27df7eed-77cd-43d0-af65-c969b6b9d465" style="max-width: 80%; height: auto;" />
 
 
 ##  **2.2 프로젝트 소개**
@@ -64,7 +64,7 @@
   
 	- 👉 **단순 정보 탐색을 넘어 ‘학위 취득과 비자 승인’이라는 구체적 목표를 가진 성인 유학생**을 핵심 타겟으로 설정함.
 
-<img width="866" height="802" alt="해외 유학 필요성1" src="https://github.com/user-attachments/assets/2965af96-db4f-432d-8918-c7c0a3756076" style="max-width: 80%; height: auto;" />
+<img alt="해외 유학 필요성1" src="https://github.com/user-attachments/assets/2965af96-db4f-432d-8918-c7c0a3756076" style="max-width: 80%; height: auto;" />
 
 사진1(뉴스 기사)
 https://edumorning.com/articles/1029
@@ -76,6 +76,7 @@ https://edumorning.com/articles/1029
       
 
 ![유학생 통계](https://cdn.topdigital.com.au/news/photo/202604/30560_50951_250.jpg )
+
 https://www.topdigital.com.au/news/articleView.html?idxno=30560
 
 
@@ -84,7 +85,7 @@ https://www.topdigital.com.au/news/articleView.html?idxno=30560
 
 	*   👉 **실제 영사와의 인터뷰 환경을 완벽히 재현하여 사용자에게 실질적인 대비책 필요**
 
-<img width="1018" height="609" alt="비자거절" src="https://github.com/user-attachments/assets/00d4cda1-f71a-4f4b-b812-077d6bfb031c" style="max-width: 80%; height: auto;"  />
+<img alt="비자거절" src="https://github.com/user-attachments/assets/00d4cda1-f71a-4f4b-b812-077d6bfb031c" style="max-width: 80%; height: auto;"  />
 
 
 https://knewsla.com/usa/20260415110110/
