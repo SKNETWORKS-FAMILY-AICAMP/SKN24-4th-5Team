@@ -1,58 +1,66 @@
-"""
-stt/vosk_stt.py
-───────────────
-Vosk 기반 Speech-to-Text.
-모델은 최초 호출 시 한 번만 로드합니다 (싱글턴 패턴).
-"""
-
+﻿import base64
 import json
+import tempfile
 import wave
+from pathlib import Path
 
-from vosk import Model, KaldiRecognizer
-from config.settings import STT_MODEL_PATH
-
-# ── 싱글턴 모델 ───────────────────────────────────────────────────────────────
-_model: Model | None = None
+from fastapi_llm.service.visa.config.settings import settings
 
 
-def _get_model() -> Model:
-    global _model
-    if _model is None:
-        print(f"[STT] Vosk 모델 로드 중: {STT_MODEL_PATH}")
-        _model = Model(STT_MODEL_PATH)
-        print("[STT] 모델 로드 완료")
-    return _model
+def speech_to_text_from_base64(audio_base64: str, audio_mime: str | None = None) -> str:
+    suffix = _suffix_for_mime(audio_mime)
+    audio_bytes = base64.b64decode(audio_base64)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(audio_bytes)
+        path = Path(tmp.name)
+    try:
+        return speech_to_text(path)
+    finally:
+        path.unlink(missing_ok=True)
 
 
-# ── 공개 함수 ─────────────────────────────────────────────────────────────────
+def speech_to_text(audio_path: str | Path) -> str:
+    from vosk import KaldiRecognizer, Model
 
-def speech_to_text(audio_path: str) -> str:
-    """
-    WAV 파일을 Vosk로 텍스트 변환합니다.
+    source_path = Path(audio_path)
+    wav_path = _ensure_wav(source_path)
+    model = Model(str(settings.VOSK_MODEL_DIR))
+    recognizer = KaldiRecognizer(model, 16000)
+    chunks: list[str] = []
 
-    Parameters
-    ----------
-    audio_path : WAV 파일 경로 (16 kHz, 모노 권장)
-
-    Returns
-    -------
-    str : 인식된 텍스트
-    """
-    model = _get_model()
-
-    with wave.open(audio_path, "rb") as wf:
-        rec = KaldiRecognizer(model, wf.getframerate())
-        result_text = ""
-
+    with wave.open(str(wav_path), "rb") as wf:
         while True:
             data = wf.readframes(4000)
             if not data:
                 break
-            if rec.AcceptWaveform(data):
-                result = json.loads(rec.Result())
-                result_text += result.get("text", "") + " "
+            if recognizer.AcceptWaveform(data):
+                chunks.append(json.loads(recognizer.Result()).get("text", ""))
+        chunks.append(json.loads(recognizer.FinalResult()).get("text", ""))
 
-        final = json.loads(rec.FinalResult())
-        result_text += final.get("text", "")
+    if wav_path != source_path:
+        wav_path.unlink(missing_ok=True)
+    return " ".join(chunk for chunk in chunks if chunk).strip()
 
-    return result_text.strip()
+
+def _ensure_wav(path: Path) -> Path:
+    from pydub import AudioSegment
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+        wav_path = Path(tmp.name)
+
+    AudioSegment.from_file(path).set_frame_rate(16000).set_channels(1).set_sample_width(2).export(
+        wav_path,
+        format="wav",
+    )
+    return wav_path
+
+
+def _suffix_for_mime(audio_mime: str | None) -> str:
+    normalized_mime = (audio_mime or "").split(";")[0].strip().lower()
+    if normalized_mime in {"audio/wav", "audio/wave", "audio/x-wav"}:
+        return ".wav"
+    if normalized_mime == "audio/webm":
+        return ".webm"
+    if normalized_mime in {"audio/mp3", "audio/mpeg"}:
+        return ".mp3"
+    return ".mp3"

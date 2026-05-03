@@ -36,10 +36,13 @@
 }
 
 body {
+    display: flex;
+    flex-direction: column;
     font-family: "DM Sans", sans-serif;
     background-color: rgba(150, 166, 217, 0.15);
     color: var(--foreground);
     line-height: 1.6;
+    min-height: 100vh;
     overflow-x: hidden;
 }
 
@@ -66,8 +69,10 @@ button {
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    flex: 1;
-    height: 100vh;
+    flex: 1 0 auto;
+    min-height: 0;
+    position: relative;
+    width: 100%;
 }
 
 /* Header */
@@ -678,6 +683,7 @@ button {
 }
 
 .site-footer {
+    flex-shrink: 0;
     width: 100%;
     background-color: rgba(150, 166, 217, 0);
 }
@@ -1089,7 +1095,7 @@ button {
         transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .chat-sidebar.open~.sidebar-toggle-desktop {
+    .chat-sidebar.open ~ .sidebar-toggle-desktop {
         left: 304px;
     }
 }
@@ -1129,7 +1135,7 @@ button {
 }
 
 @media (min-width: 1024px) {
-    .chat-sidebar.open~.sidebar-overlay~.chat-main {
+    .chat-sidebar.open ~ .sidebar-overlay ~ .chat-main {
         margin-left: 320px;
     }
 }
@@ -1588,7 +1594,7 @@ body.modal-open {
     text-align: center;
 }
 
-.account-modal__danger+.account-modal__danger {
+.account-modal__danger + .account-modal__danger {
     margin-top: 18px;
 }
 

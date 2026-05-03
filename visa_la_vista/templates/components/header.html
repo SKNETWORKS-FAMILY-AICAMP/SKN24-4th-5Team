@@ -8,9 +8,9 @@
     </a>
 
     <nav class="site-nav" aria-label="주요 메뉴">
-      <a class="site-nav__link" href="{% url 'chat' %}" data-nav="chat">입시 도우미</a>
-      <a class="site-nav__link" href="{% url 'interview' %}" data-nav="chat">모의 인터뷰</a>
-      <a class="site-nav__link" href="#">이용 가이드</a>
+      <a class="site-nav__link" href="{% url 'chat' %}" data-nav="chat"{% if not user.is_authenticated %} data-login-required{% endif %}>입시 도우미</a>
+      <a class="site-nav__link" href="{% url 'interview' %}" data-nav="chat"{% if not user.is_authenticated %} data-login-required{% endif %}>모의 인터뷰</a>
+      <a class="site-nav__link" href="{% url 'guide' %}" data-nav="guide">이용 가이드</a>
     </nav>
 
     {% if user.is_authenticated %}

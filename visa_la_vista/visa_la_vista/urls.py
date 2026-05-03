@@ -23,10 +23,10 @@ from django.conf.urls.static import static
 urlpatterns = [
     # path('', RedirectView.as_view(url='/qna/', permanent=False),name = 'index'),
     path('', TemplateView.as_view(template_name='index.html'), name='index'),
+    path('guide/', TemplateView.as_view(template_name='guide.html'), name='guide'),
     # admin에서 main으로 가기
     path('admin/', admin.site.urls),
     path('service/', include('chatbot.urls')),
     path('uauth/', include('uauth.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
-

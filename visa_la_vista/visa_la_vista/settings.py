@@ -174,6 +174,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/uauth/login/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -196,5 +197,4 @@ REST_FRAMEWORK = {
 # AWS key
 AWS_ACCESS_KEY_ID=os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY=os.getenv("AWS_SECRET_ACCESS_KEY")
-CSRF_TRUSTED_ORIGINS = ['http://54.116.27.11'] 
-
+CSRF_TRUSTED_ORIGINS = ['http://54.116.27.11:8080'] 

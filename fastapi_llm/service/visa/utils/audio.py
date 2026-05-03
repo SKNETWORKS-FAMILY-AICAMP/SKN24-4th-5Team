@@ -1,102 +1,92 @@
-"""
-utils/audio.py
-──────────────
-음성 녹음(record) + 음성 분석(analyze_audio) 유틸리티
-"""
-
-import numpy as np
-import sounddevice as sd
-from scipy.io.wavfile import write
-import librosa
-
-from config.settings import AUDIO_SAMPLE_RATE, AUDIO_CHANNELS, AUDIO_FILENAME
+import base64
+import tempfile
+from pathlib import Path
 
 
-# ── 녹음 ─────────────────────────────────────────────────────────────────────
-
-def record(filename: str = AUDIO_FILENAME,
-           fs: int = AUDIO_SAMPLE_RATE,
-           auto_start: bool = False) -> None:
-    """
-    마이크에서 오디오를 녹음하고 WAV 파일로 저장합니다.
-
-    Parameters
-    ----------
-    filename    : 저장할 WAV 파일 경로
-    fs          : 샘플링 레이트 (기본 16000 Hz)
-    auto_start  : True 이면 Enter 없이 자동 시작, False 이면 Enter 후 시작
-    """
-    print("녹음 준비...")
-
-    recording = []
-
-    def callback(indata, frames, time, status):
-        recording.append(indata.copy())
-
-    stream = sd.InputStream(samplerate=fs, channels=AUDIO_CHANNELS, callback=callback)
-
-    if not auto_start:
-        input("Enter 누르면 녹음 시작")
-
-    stream.start()
-
-    if auto_start:
-        print("자동 녹음 시작 (Enter로 종료)")
+# Decode base64 audio to a temporary file and analyze speaking features.
+def analyze_audio_base64(audio_base64: str, text: str, audio_mime: str | None = None) -> dict:
+    normalized_mime = (audio_mime or "").split(";")[0].strip().lower()
+    if normalized_mime in {"audio/wav", "audio/wave", "audio/x-wav"}:
+        suffix = ".wav"
+    elif normalized_mime == "audio/webm":
+        suffix = ".webm"
     else:
-        print("녹음 중... (Enter 누르면 종료)")
+        suffix = ".mp3"
 
-    input()  # 종료 대기
+    audio_bytes = base64.b64decode(audio_base64)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(audio_bytes)
+        path = Path(tmp.name)
 
-    stream.stop()
-    stream.close()
-
-    audio = np.concatenate(recording, axis=0)
-    audio = (audio * 32767).astype(np.int16)   # VOSK 필수: int16 변환
-
-    write(filename, fs, audio)
-    print("녹음 완료")
+    try:
+        return analyze_audio(path, text)
+    finally:
+        path.unlink(missing_ok=True)
 
 
-# ── 음성 분석 ─────────────────────────────────────────────────────────────────
+# Analyze duration, speed, filler usage, pause ratio, and speaking score.
+def analyze_audio(audio_path: str | Path, text: str) -> dict:
+    try:
+        import librosa
+    except ImportError:
+        return {}
 
-def analyze_audio(audio_path: str, text: str) -> dict:
-    """
-    librosa 기반 음성 분석.
-
-    Returns
-    -------
-    dict
-        duration        : 전체 길이 (초)
-        word_count      : 단어 수
-        speed           : 말 속도 (words/sec)
-        filler_count    : 추임새 횟수
-        energy          : 평균 RMS 에너지 (자신감 지표)
-        pause_duration  : 침묵 총 길이 (초)
-        pause_ratio     : 침묵 비율 (0~1)
-    """
-    y, sr = librosa.load(audio_path)
-
-    duration   = librosa.get_duration(y=y, sr=sr)
-    words      = text.split()
-    word_count = len(words)
-    speed      = word_count / duration if duration > 0 else 0
-
-    fillers      = ["um", "uh", "like", "you know"]
-    filler_count = sum(text.lower().count(f) for f in fillers)
-
-    energy = np.mean(librosa.feature.rms(y=y))
-
-    intervals        = librosa.effects.split(y, top_db=20)
-    speech_duration  = sum((end - start) for start, end in intervals) / sr
-    pause_duration   = duration - speech_duration
-    pause_ratio      = pause_duration / duration if duration > 0 else 0
+    y, sr = librosa.load(str(audio_path))
+    duration = librosa.get_duration(y=y, sr=sr)
+    words = text.split()
+    speed = len(words) / duration if duration > 0 else 0
+    speed_wpm = speed * 60
+    fillers = ["um", "uh", "like", "you know"]
+    filler_count = sum(text.lower().count(filler) for filler in fillers)
+    intervals = librosa.effects.split(y, top_db=20)
+    speech_duration = sum((end - start) for start, end in intervals) / sr
+    pause_ratio = (duration - speech_duration) / duration if duration > 0 else 0
+    speaking_score = calculate_speaking_score(speed_wpm, pause_ratio, filler_count)
 
     return {
-        "duration"      : round(duration, 2),
-        "word_count"    : word_count,
-        "speed"         : round(speed, 2),
-        "filler_count"  : filler_count,
-        "energy"        : round(float(energy), 4),
-        "pause_duration": round(pause_duration, 2),
-        "pause_ratio"   : round(pause_ratio, 2),
+        "duration": round(duration, 2),
+        "speed": round(speed, 2),
+        "speed_wpm": round(speed_wpm, 2),
+        "filler_count": filler_count,
+        "pause_ratio": round(pause_ratio, 2),
+        **speaking_score,
     }
+
+
+# Score speaking ability with speed 30, rhythm 30, and fluency 40.
+def calculate_speaking_score(speed_wpm: float, pause_ratio: float, filler_count: int) -> dict:
+    speed_score = _score_speed(speed_wpm)
+    rhythm_score = _score_rhythm(pause_ratio)
+    fluency_score = 40 - (filler_count * 2) - (pause_ratio * 10)
+    fluency_score = max(0, min(40, fluency_score))
+    speaking_score_100 = speed_score + rhythm_score + fluency_score
+
+    return {
+        "speed_score": round(speed_score, 2),
+        "rhythm_score": round(rhythm_score, 2),
+        "fluency_score": round(fluency_score, 2),
+        "speaking_score_100": round(speaking_score_100, 2),
+        "speaking_score_25": round(speaking_score_100 * 0.25, 2),
+    }
+
+
+# Convert WPM into the 30-point speed score.
+def _score_speed(speed_wpm: float) -> int:
+    if 90 <= speed_wpm <= 150:
+        return 30
+    if 70 <= speed_wpm < 90 or 150 < speed_wpm <= 170:
+        return 20
+    if 60 <= speed_wpm < 70 or 170 < speed_wpm <= 190:
+        return 10
+    return 5
+
+
+# Convert pause ratio into the 30-point rhythm score.
+def _score_rhythm(pause_ratio: float) -> int:
+    if 0.10 <= pause_ratio <= 0.25:
+        return 30
+    if 0.25 < pause_ratio <= 0.40:
+        return 20
+    if 0.05 <= pause_ratio < 0.10:
+        return 10
+    return 5
