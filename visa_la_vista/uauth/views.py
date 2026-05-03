@@ -22,12 +22,12 @@ def _get_email_verifications(request):
 def _get_email_verification(request, purpose):
     return _get_email_verifications(request).get(purpose)
 
-def _set_email_verification(request, purpose, email, code):
+def _set_email_verification(request, purpose, email, code, expires_at=None):
     verifications = _get_email_verifications(request)
     verifications[purpose] = {
         'email': email,
         'code': code,
-        'expires_at': int(time.time()) + VERIFICATION_EXPIRE_SECONDS,
+        'expires_at': expires_at or int(time.time()) + VERIFICATION_EXPIRE_SECONDS,
         'verified': False,
     }
     request.session.modified = True
@@ -149,12 +149,25 @@ def send_verification_email(request):
     if purpose == 'password_reset' and not user_exists:
         return JsonResponse({'success': False, 'message': '등록되어있지 않은 이메일입니다.'}, status=400)
 
+    existing_verification = _get_email_verification(request, purpose)
+    now = int(time.time())
+    should_keep_expiry = (
+        existing_verification
+        and existing_verification.get('email', '').lower() == email.lower()
+        and now <= existing_verification.get('expires_at', 0)
+    )
+    expires_at = existing_verification.get('expires_at') if should_keep_expiry else now + VERIFICATION_EXPIRE_SECONDS
+
     code = str(secrets.randbelow(900000) + 100000)
     if not send_email(email, code):
         return JsonResponse({'success': False, 'message': '인증메일 발송에 실패했습니다.'}, status=500)
 
-    _set_email_verification(request, purpose, email, code)
-    return JsonResponse({'success': True, 'message': '인증번호를 이메일로 발송했습니다.'})
+    _set_email_verification(request, purpose, email, code, expires_at=expires_at)
+    return JsonResponse({
+        'success': True,
+        'message': '인증번호를 이메일로 발송했습니다.',
+        'expires_at': expires_at,
+    })
 
 def verify_email_code(request):
     if request.method != 'POST':

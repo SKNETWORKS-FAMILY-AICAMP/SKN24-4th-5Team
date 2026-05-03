@@ -5,8 +5,8 @@
     --interview-muted: #858b9b;
     --interview-line: #eef0f5;
     display: flex;
-    width: min(100%, 1200px);
-    min-height: 720px;
+    width: min(100%, 1440px);
+    height: 90vh;
     margin: 0 auto;
     background: #ffffff;
     border-top: 1px solid var(--interview-line);
@@ -409,6 +409,32 @@
     line-height: 1.65;
 }
 
+.interview-message--audio-question {
+    min-height: 74px;
+}
+
+.interview-message--audio-question .waveform {
+    justify-content: flex-start;
+}
+
+.interview-message--audio-question .waveform span {
+    background: var(--interview-blue);
+}
+
+.interview-message--audio-answer .waveform {
+    justify-content: flex-end;
+}
+
+.interview-message--audio-answer .waveform span {
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.interview-message--audio-question.is-playing .waveform span,
+.audio-bar.is-recording .waveform span {
+    animation: wavePulse 900ms ease-in-out infinite alternate;
+    animation-delay: calc(var(--wave-index) * -40ms);
+}
+
 .evaluation-download-button {
     width: fit-content;
     margin-top: 14px;
@@ -511,8 +537,7 @@
     border-radius: 999px;
     background: #a6a8ad;
     opacity: 0.95;
-    animation: wavePulse 900ms ease-in-out infinite alternate;
-    animation-delay: calc(var(--wave-index) * -40ms);
+    animation: none;
 }
 
 .audio-bar:not(.is-recording) .waveform span,
@@ -551,6 +576,14 @@
     border: 1px solid #b8bdd0;
     background: #ffffff;
     color: #d13a3a;
+}
+
+.mic-button.is-countdown {
+    background: #ffffff;
+    color: var(--interview-blue);
+    border: 1px solid #b8bdd0;
+    font-size: 16px;
+    font-weight: 900;
 }
 
 .hidden {
