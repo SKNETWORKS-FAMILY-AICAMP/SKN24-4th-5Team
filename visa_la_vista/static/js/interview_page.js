@@ -178,6 +178,7 @@
             console.error("Failed to parse JSON:", fullResponse);
             return { error: "Invalid JSON", raw: fullResponse };
         }
+
     }
 
     // ─── File validation ──────────────────────────────────────────────────────
@@ -432,9 +433,18 @@
 
             if (data.success) {
                 lastSessionData = data.data;  // save for next round
-                const targetElement = document.getElementById("practice-question-text");
-                if (targetElement) {
-                    targetElement.textContent = data.data.question;
+                // const targetElement = document.getElementById("practice-question-text");
+                // if (targetElement) {
+                //     targetElement.textContent = data.data.question;
+                // }
+                const questionEl = document.getElementById("practice-question-text");
+                if (questionEl) {
+                    questionEl.textContent = data.data.question;
+                }
+
+                if (data.data.answer_text) {
+                    practiceAnswerText.querySelector("span").textContent = data.data.answer_text;
+                    practiceAnswerText.classList.remove("hidden");
                 }
             }
         } catch (error) {
