@@ -81,7 +81,7 @@
     *   👉 **복잡해진 상황 속에서 사용자가 궁금한 점을 즉시 해소하고 검증된 입시 데이터에 24시간 접근할 수 있는 챗봇 서비스 필요**
       
 <p align="center">
-  <img src="[https://github.com/user-attachments/assets/2965af96-db4f-432d-8918-c7c0a3756076](https://cdn.topdigital.com.au/news/photo/202604/30560_50951_250.jpg)"  width="400"/>
+  <img src="https://github.com/user-attachments/assets/d1e1f5ae-f94f-4f51-bf36-7cefe9b08000"  width="400"/>
 </p>
 
 <p>  
@@ -103,7 +103,6 @@
 출처 : <a href="https://www.naeil.com/news/read/556332?ref=naver">https://www.vietnam.vn/ko/ty-le-truot-visa-du-hoc-my-cao-nhat-10-nam</a>  
 </p>
 
-
 ###  **<h3> 4. 실용적 유학 트렌드와 대안 탐색 확대** </h3>
 
 *   단순히 '타이틀'을 쫓던 과거와 달리, 예산 내에서 실리를 찾는 '실용 유학'과 미국 외 대안 국가의 대학교를 찾는 수요가 늘고 있습니다.
@@ -111,14 +110,26 @@
     *   👉 **수십 개의 유학원에 파편화된 정보를 일일이 대조하는 대신, 사용자의 조건에 최적화된 국가별·학교별 대안을 객관적으로 답변해 주는 데이터 기반 플랫폼이 필요**
     
 
-<p align="center">
-  <img src="https://cdn.topdigital.com.au/news/photo/202604/30560_50951_250.jpg" width="400"/>
-</p>
+<table align="center">
+  <tr>
+    <td>
+      <img src="https://cdn.topdigital.com.au/news/photo/202604/30560_50951_250.jpg" width="400"/>
+    </td>
+    <td>
+      <img src="https://github.com/user-attachments/assets/41d567b0-392f-4a59-929c-ea1451993e25" width="400"/>
+    </td>
+  </tr>
+</table>
+
+
+
 
 <p>
   출처: <a href="https://www.naeil.com/news/read/556332?ref=naver">https://www.naeil.com/news/read/556332?ref=naver</a>
 </p>
-
+<p>
+  출처: <a href="https://www.topdigital.com.au/news/articleView.html?idxno=30560">https://www.topdigital.com.au/news/articleView.html?idxno=30560</a>
+</p>
 
 ##  **2.4 프로젝트 목표**
 
