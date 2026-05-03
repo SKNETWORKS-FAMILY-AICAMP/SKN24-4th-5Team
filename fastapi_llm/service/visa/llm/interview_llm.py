@@ -1,6 +1,7 @@
 ﻿from fastapi_llm.service.visa.api.schemas import HistoryItem
 from fastapi_llm.service.visa.llm.rag import get_visa_rag_store
 from fastapi_llm.shared.llm_client import get_llm_client
+from fastapi_llm.service.visa.utils.grammar import evaluate_grammar
 
 
 # Generate the next F1 visa interview question from the applicant profile and history.
@@ -8,7 +9,7 @@ def generate_question(profile_context: str, history: list[HistoryItem]) -> str:
     history_text = _format_history(history)
     q_ref = get_visa_rag_store().get_reference_question("F1 visa interview")
     question_prompt = f"""
-        당신은 미국 F1 비자 인터뷰 면접관입니다. 사용자가 미국 F1 비자 지원자라고 생각하고 다음 조건에 맞게 질문을 생성하세요.
+        당신은 영어권 비자 인터뷰 면접관입니다. 사용자가 영어권 비자 지원자라고 생각하고 다음 조건에 맞게 질문을 생성하세요.
         
         [절대 규칙 - 반드시 지켜야 함]
         - 오직 질문 1문장만 출력하세요.
@@ -94,6 +95,7 @@ def generate_question(profile_context: str, history: list[HistoryItem]) -> str:
 def generate_evaluation(profile_context: str, history: list[HistoryItem]) -> str:
     history_text = _format_history(history)
     audio_text = _format_audio(history)
+    grammar_text = _format_grammar(history)
     a_ref = get_visa_rag_store().get_reference_answer("Suggested answers")
     final_prompt = f"""
 You are a US F1 visa officer.
@@ -110,49 +112,87 @@ You are a US F1 visa officer.
 음성 분석:
 {audio_text or "음성 분석 결과 없음"}
 
+문법 정량 평가:
+{grammar_text or "문법 정량 평가 결과 없음"}
+
 [핵심 규칙]
 
 - 평가 시 한국어로 출력합니다.
 
-[평가 기준]
+[점수 기반 최종 평가 기준]
 
-1. 사용자의 답변이 지원자 정보와 일치하는 내용인가를 평가하세요.
-2. 사용자의 답변이 논리성이 있는지 평가하세요.
-3. 사용자의 답변이 문법적으로 오류가 없는지 평가하세요.
-4. 사용자의 답변이 영어로 표현되었는지 평가하세요.
-5. 참고 답변과 비교하여 지원자의 답변이 인터뷰 질문에 적절히 답변했는지 평가하세요. 
-6. 음성 분석에 기반하여 지원자의 자신감과 유창성을 평가하세요. 
-     - 말 속도가 너무 느리거나 빠르지 않은지 평가하세요. 
-     - pause 비율이 낮을수록 유창성이 높다고 평가하세요. 
-     - filler 사용이 적을수록 자신감이 높다고 평가하세요.
-[추가 음성 평가 규칙]
-- 음성 분석 결과가 있는 경우 위 값은 실제 측정값입니다.
-- "가정", "추정", "예상"이라는 표현은 사용하지 마세요.
-- duration은 답변 길이, speed는 초당 단어 수, pause_ratio는 침묵 비율, filler_count는 filler 사용 횟수입니다.
-- speed, pause_ratio, filler_count를 기준으로 유창성과 자신감을 평가하세요.
-- 단, duration, speed, pause_ratio, filler_count의 실제 숫자는 출력하지 마세요.
-- 음성 분석 결과는 "말이 다소 빠른 편입니다", "답변 시간이 짧아 설명이 부족해 보입니다", "중간 멈춤이 적어 흐름은 자연스럽습니다"처럼 자연스러운 한국어 피드백으로만 표현하세요.
-- 음성 분석 결과가 없는 경우에만 음성 평가는 생략하세요.
+최종 평가는 100점 만점으로 산정합니다.
+아래 4개 항목을 각각 25점 만점으로 평가합니다.
 
+1. 답변의 논리성 (25점)
+- 사용자의 답변이 질문에 대해 논리적으로 구성되어 있는지 평가하세요.
+- 답변이 질문의 핵심에 직접 답하고 있는지 확인하세요.
+- 주장과 근거가 자연스럽게 연결되어 있으면 높은 점수를 부여하세요.
+- 질문과 관련 없는 답변이거나 의미가 모호하면 낮은 점수를 부여하세요.
+- 이 항목은 직접 평가하여 0~25점 사이의 점수를 부여하세요.
+
+2. 답변의 일치성 (25점)
+- 사용자의 답변이 지원자 정보(profile_context)와 일치하는지 평가하세요.
+- 학교명, 전공, 학비, 재정 정보, 입학 시기 등 핵심 정보가 지원자 정보와 충돌하지 않는지 확인하세요.
+- 지원자 정보에 없는 내용을 과도하게 단정하거나 허위로 말한 경우 낮은 점수를 부여하세요.
+- 이 항목은 직접 평가하여 0~25점 사이의 점수를 부여하세요.
+
+3. 언어 문법 평가 (25점)
+- 문법 정량 평가 결과의 grammar_score_25 값을 그대로 사용하세요.
+- 이 점수는 Python 문법 평가 모델로 계산된 실제 점수입니다.
+- grammar_score_25를 임의로 수정하지 마세요.
+- 문법 정량 평가 결과가 없는 경우에만 답변 텍스트를 기준으로 직접 평가하세요.
+
+4. 언어 구사 능력 (25점)
+- 음성 분석 결과의 speaking_score_25 값을 그대로 사용하세요.
+- 이 점수는 말하기 속도, 리듬, 유창성을 기반으로 계산된 실제 점수입니다.
+- speaking_score_25를 임의로 수정하지 마세요.
+- 음성 분석 결과가 없는 경우에만 음성 평가는 생략하거나 낮은 점수로 평가하세요.
+
+[합격/불합격 기준]
+
+- 총점은 위 4개 항목의 합산입니다.
+- 총점이 80점 이상이면 "합격"으로 판정하세요.
+- 총점이 80점 미만이면 "불합격"으로 판정하세요.
+- 최종 결과는 반드시 "합격" 또는 "불합격" 중 하나만 출력하세요.
+- 총점과 항목별 점수는 내부 판단에만 사용하고, 출력에는 표시하지 마세요.
+- 단, 아래 조건 중 하나라도 해당하면 총점과 관계없이 반드시 "불합격"으로 판정하세요.
+  1. 사용자가 영어로 답변하지 않은 경우
+  2. 사용자의 답변이 지원자 정보(profile_context)와 명백히 일치하지 않는 경우
+
+[피드백 작성 기준]
+
+- 문법 정량 평가 결과가 있는 경우 grammar_score_25는 25점 만점의 실제 문법 점수입니다.
+- grammar_score_25가 낮을수록 문법 오류나 어색한 표현이 많은 답변으로 평가하세요.
+- grammar_corrected_text는 문법 교정 참고용 문장입니다.
+- 단, grammar_error_ratio의 실제 숫자는 출력하지 마세요.
+- 실제 숫자는 출력하지 말고 자연스럽게 말하세요. 예를 들어 grammar_score_25가 낮으면 "문법 오류가 다수 발견됩니다"와 같이 표현하세요.
+- 출력문에는 점수, 배점, 총점, 항목별 점수, "00/100", "00/25", "(10/25)" 같은 숫자 표현을 절대 포함하지 마세요.
+- "답변의 논리성", "답변의 일치성", "언어 문법 평가", "언어 구사 능력" 같은 평가 항목명을 점수표처럼 나열하지 마세요.
+- 점수 계산은 내부 판단에만 사용하고, 사용자에게는 자연스러운 문장형 피드백만 제공하세요.
 
 Output:
 
-최종 결과: 비자 승인 또는 비자 거절
-    - 실제 f1 비자 인터뷰의 결과에 맞게 "비자 승인" 또는 "비자 거절"로 출력하세요.
+최종 결과: 합격 또는 불합격
+
 전반적인 피드백:
-    - 한국어 한 문단으로 지원자의 잘한 점과 개선할 점을 평가하세요.
+- 한국어 한 문단으로 지원자의 답변 전반을 평가하고, 합격 또는 불합격 판단의 핵심 이유를 설명하세요.
 
 개선사항:
-    - 구체적으로 무엇이 부족했는지 설명하세요.    
-    - 사용자의 대답마다 1~2문장으로 평가하세요.
-    - 참고 답변을 기반으로 추천 답변을 영어 답변으로 제공하세요.
-    - 전체적인 음성분석 결과를 바탕으로 말하기 속도, 자신감, 유창성에 대한 피드백을 제공하세요.
-
-
+- 질문과 사용자의 답변을 다시 출력하세요.
+- 각 질문에 대한 사용자의 대답마다 1~2문장으로 부족한 점과 개선 방향을 자연스러운 문장으로 작성하세요.
+- 필요한 경우 참고 답변을 기반으로 추천 영어 답변을 제공하세요.
+- 각 질문마다 음성 분석 결과를 바탕으로 말하기 문법, 속도, 자신감, 유창성에 대한 피드백을 자연스럽게 제공하세요.
 """
     return get_llm_client().invoke(final_prompt)
 
+# 총점: 00/100
 
+# 항목별 점수:
+# - 답변의 논리성: 00/25
+# - 답변의 일치성: 00/25
+# - 언어 문법 평가: 00/25
+# - 언어 구사 능력: 00/25
 # Convert history objects to Q/A text for LLM prompts.
 def _format_history(history: list[HistoryItem]) -> str:
     lines = []
@@ -169,4 +209,14 @@ def _format_audio(history: list[HistoryItem]) -> str:
     for i, item in enumerate(history, 1):
         if item.audio:
             lines.append(f"Q{i}: {item.audio}")
+    return "\n".join(lines)
+
+
+# Convert grammar scores for answered history into prompt text.
+def _format_grammar(history: list[HistoryItem]) -> str:
+    lines = []
+    for i, item in enumerate(history, 1):
+        if item.answer:
+            grammar = evaluate_grammar(item.answer)
+            lines.append(f"Q{i}: {grammar}")
     return "\n".join(lines)

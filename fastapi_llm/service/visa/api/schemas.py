@@ -29,6 +29,7 @@ class VisaTurnRequest(BaseModel):
 # Actual interview turn result returned from FastAPI to Django.
 class VisaTurnData(BaseModel):
     mode: InterviewMode
+    max_q: int | None = None
     question: str | None = None
     question_audio_base64: str | None = None
     question_audio_mime: str | None = None

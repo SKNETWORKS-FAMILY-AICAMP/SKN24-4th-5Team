@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 pydantic
 pydantic-settings
+python-dotenv
 python-multipart
 
 langchain-core
@@ -13,6 +14,8 @@ chromadb
 datasets
 pandas
 sentence-transformers
+transformers
+sentencepiece
 
 vosk
 pydub

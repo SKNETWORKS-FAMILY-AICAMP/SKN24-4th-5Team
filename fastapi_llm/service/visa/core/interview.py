@@ -29,6 +29,7 @@ async def handle_interview_turn(payload: VisaTurnRequest) -> VisaTurnResponse:
         return VisaTurnResponse(
             data=VisaTurnData(
                 mode=payload.mode,
+                max_q=payload.max_q,
                 answer_text=answer_text,
                 history=history,
                 is_over=True,
@@ -43,6 +44,7 @@ async def handle_interview_turn(payload: VisaTurnRequest) -> VisaTurnResponse:
     return VisaTurnResponse(
         data=VisaTurnData(
             mode=payload.mode,
+            max_q=payload.max_q,
             question=question,
             question_audio_base64=question_audio,
             question_audio_mime="audio/mpeg" if question_audio else None,
@@ -68,4 +70,3 @@ def _attach_answer(
         history.append(HistoryItem(question=current_question, answer=answer_text, audio=audio_features))
 
     return history
-

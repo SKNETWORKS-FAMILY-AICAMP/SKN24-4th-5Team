@@ -1,14 +1,18 @@
 ﻿import base64
-
-from fastapi import APIRouter, Request, Header, HTTPException
 import os
-    
+from pathlib import Path
+
+from dotenv import load_dotenv
+from fastapi import APIRouter, Request
+
 from fastapi_llm.service.visa.api.schemas import VisaTurnRequest, VisaTurnResponse
 from fastapi_llm.service.visa.core.interview import handle_interview_turn
 
 router = APIRouter(prefix="/visa", tags=["visa"])
 
-API_SECRET_KEY = os.getenv("FASTAPI_SECRET_KEY", "66b15280d3145859f2e9e42bb8b41db32c85317ceaefba8144a33412cca50bbb")
+load_dotenv(Path(__file__).resolve().parents[3] / ".env")
+API_SECRET_KEY = os.getenv("FASTAPI_SECRET_KEY", "")
+
 
 # 인터뷰 연습 API
 @router.post("/interview", response_model=VisaTurnResponse)
