@@ -127,9 +127,19 @@ async def chat_message_create(request):
     if conversation is None:
         conversation = await AdmissionChatConversation.objects.acreate(
             title=content[:40],
-            user=request.user if request.user.is_authenticated else None,
+            # 2. Use the 'user' variable we fetched asynchronously
+            user=user if is_authenticated else None,
             group_label='오늘',
         )
+
+    user_id = str(user.id) if is_authenticated else "anonymous"
+
+    # if conversation is None:
+    #     conversation = await AdmissionChatConversation.objects.acreate(
+    #         title=content[:40],
+    #         user=request.user if request.user.is_authenticated else None,
+    #         group_label='오늘',
+    #     )
 
     user_id = str(request.user.id) if request.user.is_authenticated else "anonymous"
     chat_id = str(conversation.id)
