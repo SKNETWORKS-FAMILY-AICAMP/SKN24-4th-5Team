@@ -75,9 +75,6 @@
 
 
 
-사진1(뉴스 기사)
-https://edumorning.com/articles/1029
-
 ###  **<h3> 2. 미국 유학의 견고한 수요와 높아지는 진입 장벽** </h3>
 *   고환율, 자국민 우선주의, 취업 불안정성 등 현실적인 리스크가 그 어느 때보다 심화되었지만, **미국**은 여전히 **압도적인 유학생 비중 1위**를 기록하며 견고한 선호도를 보이고 있음
   
@@ -113,13 +110,13 @@ https://edumorning.com/articles/1029
   
     *   👉 **수십 개의 유학원에 파편화된 정보를 일일이 대조하는 대신, 사용자의 조건에 최적화된 국가별·학교별 대안을 객관적으로 답변해 주는 데이터 기반 플랫폼이 필요**
     
-<img width="860" height="410" alt="해외 유학성 추이" src="https://github.com/user-attachments/assets/5b8403dc-b3a7-4818-90f1-07a2f7e7ea3c"  width="400"/>
 
-<p>  
-출처 : <a href="https://www.naeil.com/news/read/556332?ref=naver">https://www.naeil.com/news/read/556332?ref=naver</a>  
+<p align="center">
+  <img src="https://cdn.topdigital.com.au/news/photo/202604/30560_50951_250.jpg" width="400"/>
 </p>
-<p>  
-출처 : <a href="https://www.naeil.com/news/read/556332?ref=naver">https://www.naeil.com/news/read/556332?ref=naver</a>  
+
+<p>
+  출처: <a href="https://www.naeil.com/news/read/556332?ref=naver">https://www.naeil.com/news/read/556332?ref=naver</a>
 </p>
 
 
