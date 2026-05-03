@@ -22,8 +22,8 @@ from .models import (
 load_dotenv()
 
 # S1 Runpod FASTAPI
-FASTAPI_URL_S1 = "https://1r3qiu3k9lvtup-8000.proxy.runpod.net"
-FASTAPI_SECRET_KEY_S1 = os.getenv("FASTAPI_SECRET_KEY", "")
+FASTAPI_URL = os.getenv("FASTAPI_URL")
+FASTAPI_SECRET_KEY = os.getenv("FASTAPI_SECRET_KEY")
 
 def _chat_queryset_for_user(request):
     queryset = AdmissionChatConversation.objects.prefetch_related('messages').filter(
@@ -153,9 +153,9 @@ async def chat_message_create(request):
         async with httpx.AsyncClient(timeout=300) as client:
             async with client.stream(
                 "POST",
-                f"{FASTAPI_URL_S1}/admission/chat/v1",
+                f"{FASTAPI_URL}/admission/chat/v1",
                 json={"user_id": user_id, "chat_id": chat_id, "question": content},
-                headers={"x-api-key": FASTAPI_SECRET_KEY_S1},
+                headers={"x-api-key": FASTAPI_SECRET_KEY},
             ) as resp:
                 async for line in resp.aiter_lines():
                     if not line:
@@ -305,9 +305,8 @@ from django.http import StreamingHttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-# FASTAPI_URL_S2 =  "http://127.0.0.1:8001" 
-FASTAPI_URL_S2 = "https://zbn0fwzba1ylfl-8000.proxy.runpod.net"
-API_SECRET_KEY_S2 = "66b15280d3145859f2e9e42bb8b41db32c85317ceaefba8144a33412cca50bbb"
+FASTAPI_URL = "https://zbn0fwzba1ylfl-8000.proxy.runpod.net"
+API_SECRET_KEY = "66b15280d3145859f2e9e42bb8b41db32c85317ceaefba8144a33412cca50bbb"
 import base64
 
 @require_POST
@@ -343,7 +342,6 @@ async def interview_session_create(request):
         "current_question": data.get("current_question") or None,
     }
 
-    # ✅ Check 1: did Django receive the audio file?
     audio_bytes = None
     audio_name = None
     audio_content_type = None
@@ -352,29 +350,26 @@ async def interview_session_create(request):
         audio_name = audio_file.name
         audio_content_type = audio_file.content_type or "audio/wav"
 
-        # ✅ Check 2: print to Django console to confirm receipt
         print(f"[audio received] name={audio_name}, size={len(audio_bytes)} bytes, type={audio_content_type}")
     else:
         print("[audio received] NO audio file — sending JSON only")
 
-    # ✅ Convert to base64 BEFORE the generator (bytes can't be read twice)
     audio_base64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
 
     if audio_base64:
-        # Add base64 audio into the JSON payload instead of sending as multipart
+        # base64 audio in JSON payload 
         payload["audio_base64"] = audio_base64
         payload["audio_mime"] = audio_content_type
         print(f"[audio base64] length={len(audio_base64)} chars")
 
-    target_url = f"{FASTAPI_URL_S2.rstrip('/')}/visa/interview"
+    target_url = f"{FASTAPI_URL.rstrip('/')}/visa/interview"
 
     async def stream_generator():
         async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
             try:
-                # ✅ Always send JSON — audio is now inside payload as base64
                 async with client.stream(
                     "POST", target_url,
-                    headers={"x-api-key": API_SECRET_KEY_S2},
+                    headers={"x-api-key": API_SECRET_KEY},
                     json=payload,   # audio_base64 + audio_mime are inside here
                 ) as response:
                     print(f"[runpod] response status: {response.status_code}")
@@ -415,9 +410,7 @@ async def before_multipart_audio_interview_session_create(request):
         "current_question": data.get("current_question") or None,
     }
 
-    # Match EXACTLY what the test version does:
-    # data={"payload": json_string}, no audio_file
-    target_url = f"{FASTAPI_URL_S2.rstrip('/')}/visa/interview"  # No trailing slash
+    target_url = f"{FASTAPI_URL.rstrip('/')}/visa/interview"  # No trailing slash
 
     async def stream_generator():
         async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
@@ -425,7 +418,7 @@ async def before_multipart_audio_interview_session_create(request):
                 async with client.stream(
                     "POST",
                     target_url,
-                    headers={"x-api-key": API_SECRET_KEY_S2},
+                    headers={"x-api-key": API_SECRET_KEY},
                     # This replicates requests' data= param (form field, not file)
                     # data={"payload": json.dumps(payload, ensure_ascii=False)},
                      json=payload,  
