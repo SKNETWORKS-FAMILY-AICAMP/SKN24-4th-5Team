@@ -81,29 +81,32 @@
 ###  **<h3> 2.3.2. 높아지는 진입 장벽에 비해 미국 유학의 견고한 수요** </h3>
 *   높은 환율, 자국민 우선주의, 취업 불안정성 등 현실적인 리스크가 그 어느 때보다 심화되었지만, **미국**은 여전히 **압도적인 유학생 비중 1위**를 기록하며 견고한 선호도를 보이고 있음
   
-    *   👉 **유학 시장의 진입 장벽이 높아짐에 따라 단 한 번의 실수가 없는 철저한 준비가 요구됨**
+    *   👉 **유학 시장의 진입 장벽이 높아짐에 따라 단 한 번의 실수가 없는 철저한 준비가 요구**
 
 	  
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/d1e1f5ae-f94f-4f51-bf36-7cefe9b08000"  width="400"/>
-</p>
 
-<p>  
-출처 : <a href="https://knewsla.com/usa/20260415110110/">https://knewsla.com/usa/20260415110110/</a>  
-</p>
 
 ---
 
 ###  **<h3> 2.3.3. 학생비자 거부율 35%, 10년 내 최고치,  “미국 유학 장벽 현실화”** </h3>
-*   트럼프 행정부 심사 강화 여파로 국제교육업체 쇼어라이트(Shorelight) 분석 결과, 2025년 **F-1(유학생) 비자 거부율은 35%로 집계**됐다. 이는 2024년 31%에서 상승한 수치로, 2015년 이후 10년간 가장 높은 수준인 것을 확인 할 수 있음
+*   트럼프 행정부 비자 인터뷰 심사 강화 여파로 국제교육업체 쇼어라이트(Shorelight) 분석 결과, 2025년 **F-1(유학생) 비자 거부율은 35%로 집계**됐다. 이는 2024년 31%에서 상승한 수치로, 2015년 이후 10년간 가장 높은 수준인 것을 확인 할 수 있음
 
 	*   👉 **실제 영사와의 인터뷰 환경을 완벽히 재현하여 사용자에게 실질적인 대비책 필요**
 
+<table align="center">
+  <tr>
+    <td>
+      <img src=https://github.com/user-attachments/assets/d1e1f5ae-f94f-4f51-bf36-7cefe9b08000 width="400"/>
+    </td>
+    <td>
+      <img src=https://github.com/user-attachments/assets/00d4cda1-f71a-4f4b-b812-077d6bfb031c width="400"/>
+    </td>
+  </tr>
+</table>
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/00d4cda1-f71a-4f4b-b812-077d6bfb031c" width="400"/>
+<p>  
+출처 : <a href="https://knewsla.com/usa/20260415110110/">https://knewsla.com/usa/20260415110110/</a>  
 </p>
-
 <p>  
 출처 : <a href="https://www.vietnam.vn/ko/ty-le-truot-visa-du-hoc-my-cao-nhat-10-nam">https://www.vietnam.vn/ko/ty-le-truot-visa-du-hoc-my-cao-nhat-10-nam</a>  
 </p>
