@@ -543,6 +543,7 @@
 
     micButtons.forEach((button) => {
         button.addEventListener("click", async () => {
+            alert("click");
             const audioBar = button.closest(".audio-bar");
             const isRecording = button.classList.toggle("is-recording");
             audioBar.classList.toggle("is-recording", isRecording);
