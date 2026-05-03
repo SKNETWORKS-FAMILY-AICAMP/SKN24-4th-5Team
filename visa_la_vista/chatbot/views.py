@@ -119,6 +119,9 @@ async def chat_message_create(request):
     if not content:
         return JsonResponse({'error': '메시지를 입력해주세요.'}, status=400)
 
+    # ✅ Use async version instead of request.user
+    user = await request.auser()
+
     if conversation_id:
         conversation = await AdmissionChatConversation.objects.filter(id=conversation_id).afirst()
     else:
@@ -127,21 +130,11 @@ async def chat_message_create(request):
     if conversation is None:
         conversation = await AdmissionChatConversation.objects.acreate(
             title=content[:40],
-            # 2. Use the 'user' variable we fetched asynchronously
-            user=user if is_authenticated else None,
+            user=user if user.is_authenticated else None,  # ✅ use local `user`
             group_label='오늘',
         )
 
-    user_id = str(user.id) if is_authenticated else "anonymous"
-
-    # if conversation is None:
-    #     conversation = await AdmissionChatConversation.objects.acreate(
-    #         title=content[:40],
-    #         user=request.user if request.user.is_authenticated else None,
-    #         group_label='오늘',
-    #     )
-
-    user_id = str(request.user.id) if request.user.is_authenticated else "anonymous"
+    user_id = str(user.id) if user.is_authenticated else "anonymous"  # ✅
     chat_id = str(conversation.id)
     conv_title = conversation.title
     conv_group = conversation.group_label
