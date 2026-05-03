@@ -32,6 +32,8 @@
     let realMicCountdownId = null;
     let currentQuestionAudio = null;
     let isRealFinishing = false;
+    let isRealQuestionAudioPlaying = false;
+    let isRealAwaitingAnswer = false;
     let isAnswerSubmitting = false;
     let isRealEvaluationRequesting = false;
     let hasRealEvaluation = false;
@@ -111,6 +113,8 @@
         clearChat("real");
         lastSessionData = null;
         isRealFinishing = false;
+        isRealQuestionAudioPlaying = false;
+        isRealAwaitingAnswer = false;
         isAnswerSubmitting = false;
         isRealEvaluationRequesting = false;
         hasRealEvaluation = false;
@@ -262,6 +266,7 @@
         document.querySelectorAll(".interview-message--audio-question.is-playing").forEach((bubble) => {
             bubble.classList.remove("is-playing");
         });
+        isRealQuestionAudioPlaying = false;
         if (!currentQuestionAudio) return;
         currentQuestionAudio.pause();
         currentQuestionAudio.currentTime = 0;
@@ -298,9 +303,11 @@
 
         stopQuestionAudio();
         currentQuestionAudio = audio;
+        isRealQuestionAudioPlaying = true;
         waveformBubble?.classList.add("is-playing");
         audio.addEventListener("ended", () => {
             waveformBubble?.classList.remove("is-playing");
+            isRealQuestionAudioPlaying = false;
             if (currentQuestionAudio === audio) {
                 currentQuestionAudio = null;
             }
@@ -624,6 +631,8 @@
         isAnswerSubmitting = false;
         isRealEvaluationRequesting = false;
         hasRealEvaluation = false;
+        isRealQuestionAudioPlaying = false;
+        isRealAwaitingAnswer = false;
         window.clearTimeout(realMicDelayId);
         window.clearInterval(realMicCountdownId);
         window.clearInterval(realTimerId);
@@ -653,6 +662,7 @@
                         data.data.question_audio_base64,
                         data.data.question_audio_mime,
                     );
+                    isRealAwaitingAnswer = true;
                     playQuestionAudio(
                         data.data.question_audio_base64,
                         data.data.question_audio_mime,
@@ -708,7 +718,7 @@
                 button.innerHTML = button.dataset.defaultHtml;
             }
             const wasRecording = button.classList.contains("is-recording");
-            if (isRealFinishing && !wasRecording) {
+            if (isRealFinishing && !wasRecording && !isRealAwaitingAnswer) {
                 resetMicButton(button);
                 return;
             }
@@ -746,7 +756,7 @@
     }
 
     function startRealMicCountdown(button) {
-        if (!button || isRealFinishing) return;
+        if (!button || hasRealEvaluation) return;
 
         let remaining = 5;
         window.clearTimeout(realMicDelayId);
@@ -773,7 +783,7 @@
     }
 
     async function startRecordingFromButton(button) {
-        if (!button || recorderState || isRealFinishing) return;
+        if (!button || recorderState || hasRealEvaluation) return;
 
         const audioBar = button.closest(".audio-bar");
         button.classList.remove("is-countdown");
@@ -831,7 +841,6 @@
         isRealFinishing = true;
         window.clearTimeout(realMicDelayId);
         window.clearInterval(realMicCountdownId);
-        stopQuestionAudio();
 
         const realMicButton = document.querySelector("#real-audio-bar [data-mic-button]");
         if (isAnswerSubmitting || isRealEvaluationRequesting || hasRealEvaluation) {
@@ -839,9 +848,16 @@
             return;
         }
 
-        if (recorderState) {
-            await stopAndSend("real", true);
-            resetMicButton(realMicButton);
+        if (isRealQuestionAudioPlaying) {
+            return;
+        }
+
+        if (isRealAwaitingAnswer) {
+            if (recorderState) {
+                return;
+            }
+
+            startRealMicCountdown(realMicButton);
             return;
         }
 
@@ -883,6 +899,10 @@
         // ← inside the IIFE, has access to everything
         if (!recorderState) return;
 
+        if (mode === "real" && isRealFinishing) {
+            isOver = true;
+        }
+
         const { chunks, sampleRate, processorNode, sourceNode, audioContext, stream } = recorderState;
 
         const blob = encodeWav(chunks, sampleRate);
@@ -922,6 +942,7 @@
                 resetMicButton(micButton);
                 if (shouldShowRealAnswerWave) {
                     appendAudioAnswer(mode);
+                    isRealAwaitingAnswer = false;
                 } else if (data.data.answer_text) {
                     appendAnswer(mode, data.data.answer_text);
                 }
@@ -946,6 +967,7 @@
                         data.data.question_audio_base64,
                         data.data.question_audio_mime,
                     );
+                    isRealAwaitingAnswer = true;
                     playQuestionAudio(
                         data.data.question_audio_base64,
                         data.data.question_audio_mime,
