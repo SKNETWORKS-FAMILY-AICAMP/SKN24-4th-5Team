@@ -1,0 +1,191 @@
+{% extends "layout/base.html" %}
+{% load static %}
+
+{% block title %}Guide{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'styles/guide.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="guide-page" aria-labelledby="guide-title">
+  <div class="guide-page__inner">
+    <h1 class="guide-title" id="guide-title">가이드</h1>
+
+    <div class="guide-switch" role="tablist" aria-label="서비스 가이드 선택">
+      <button class="guide-switch__button is-active" type="button" role="tab" aria-selected="true" aria-controls="guide-panel-service1" id="guide-tab-service1" data-guide-target="service1">
+        입시 도우미 챗봇
+      </button>
+      <button class="guide-switch__button" type="button" role="tab" aria-selected="false" aria-controls="guide-panel-service2" id="guide-tab-service2" data-guide-target="service2">
+        비자 모의 인터뷰
+      </button>
+    </div>
+
+    <article class="guide-panel is-active" id="guide-panel-service1" role="tabpanel" aria-labelledby="guide-tab-service1" data-guide-panel="service1">
+      <header class="guide-hero guide-hero--admission">
+        <p class="guide-hero__badge">Service 01</p>
+        <h2>입시 도우미 챗봇<br><span>사용자 가이드</span></h2>
+        <p>한국어로 질문하면 미국 주요 대학 입시 정보를 즉시 조회해 드립니다. LangGraph 기반 AI 에이전트가 영어 데이터베이스를 자동으로 검색하고 한국어로 답변합니다.</p>
+        <div class="guide-chips" aria-label="입시 도우미 주요 기능">
+          <span><strong>DB</strong> 미국 상위 10개 대학</span>
+          <span><strong>언어</strong> 한국어 질문</span>
+          <span><strong>기술</strong> LangGraph + LLM</span>
+          <span><strong>저장</strong> 채팅 최대 3개</span>
+        </div>
+      </header>
+
+      <div class="guide-content">
+        <section class="guide-section">
+          <p class="guide-section__label">How to Use</p>
+          <h3>사용 방법 - 4단계</h3>
+          <div class="guide-step-grid">
+            <div class="guide-step-card">
+              <span class="guide-step-card__num">1</span>
+              <div>
+                <h4>질문 입력</h4>
+                <p>하단 입력창에 알고 싶은 입시 정보를 한국어로 자유롭게 입력합니다. 대학명과 원하는 정보 유형을 함께 적으면 더 정확한 답변을 받을 수 있습니다.</p>
+              </div>
+            </div>
+            <div class="guide-step-card">
+              <span class="guide-step-card__num">2</span>
+              <div>
+                <h4>전송</h4>
+                <p>Enter 키를 누르거나 전송 아이콘을 클릭합니다. AI 에이전트가 영어 키워드로 변환하여 데이터베이스를 검색합니다.</p>
+              </div>
+            </div>
+            <div class="guide-step-card">
+              <span class="guide-step-card__num">3</span>
+              <div>
+                <h4>답변 확인</h4>
+                <p>데이터베이스 조회 결과를 한국어로 변환하여 답변합니다. 상세 정보를 확인할 수 있는 공식 대학 홈페이지 링크도 함께 제공됩니다.</p>
+              </div>
+            </div>
+            <div class="guide-step-card">
+              <span class="guide-step-card__num">4</span>
+              <div>
+                <h4>추가 질문</h4>
+                <p>답변 확인 후 이어서 궁금한 사항을 추가로 질문할 수 있습니다. 같은 대화에서 연속으로 질문하면 맥락이 유지됩니다.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="guide-section">
+          <p class="guide-section__label">Example Questions</p>
+          <h3>이런 질문을 해보세요</h3>
+          <div class="guide-example-grid">
+            <div class="guide-example-card">
+              <strong>펜실베이니아 대학교 학비 알려줘</strong>
+              <p>연간 수업료, 수수료, 생활비 등을 포함한 금액과 공식 재정 지원 페이지 링크를 안내합니다.</p>
+            </div>
+            <div class="guide-example-card">
+              <strong>UCLA 입학에 필요한 서류는 무엇인가요?</strong>
+              <p>성적표, 추천서, 에세이 등 필요 서류를 항목별로 정리하고 공식 입학처 링크를 제공합니다.</p>
+            </div>
+            <div class="guide-example-card">
+              <strong>NYU TOEFL 최소 점수가 어떻게 되나요?</strong>
+              <p>최소 점수 기준과 경쟁력 있는 점수 범위를 데이터베이스에서 조회하여 안내합니다.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="guide-section">
+          <p class="guide-section__label">Available Data</p>
+          <h3>조회 가능한 정보 유형</h3>
+          <div class="guide-data-grid">
+            <div><h4>학업 요건</h4><p>GPA, SAT/ACT, TOEFL/IELTS 점수 기준</p></div>
+            <div><h4>제출 서류</h4><p>추천서, 에세이, 성적 증명서, 포트폴리오</p></div>
+            <div><h4>전형 일정</h4><p>지원 마감일, 합격자 발표 일정</p></div>
+            <div><h4>학비 정보</h4><p>수업료, 생활비, 장학금 정보</p></div>
+            <div><h4>비학업 요소</h4><p>활동, 리더십, 봉사 등 평가 기준</p></div>
+            <div><h4>공식 FAQ</h4><p>각 대학 입학처의 자주 묻는 질문</p></div>
+          </div>
+        </section>
+      </div>
+    </article>
+
+    <article class="guide-panel" id="guide-panel-service2" role="tabpanel" aria-labelledby="guide-tab-service2" data-guide-panel="service2" hidden>
+      <header class="guide-hero guide-hero--interview">
+        <p class="guide-hero__badge">Service 02</p>
+        <h2>비자 모의 인터뷰<br><span>사용자 가이드</span></h2>
+        <p>I-20 서류 업로드 한 장으로 시작하는 맞춤형 F-1 비자 인터뷰 시뮬레이션입니다. AI 면접관이 실제 영사관 인터뷰 환경을 재현하고 종합 피드백을 제공합니다.</p>
+        <div class="guide-chips" aria-label="비자 모의 인터뷰 주요 기능">
+          <span><strong>TTS</strong> 음성 질문</span>
+          <span><strong>STT</strong> 음성 답변 변환</span>
+          <span><strong>평가</strong> 종합 분석</span>
+          <span><strong>결과</strong> PDF 다운로드</span>
+        </div>
+      </header>
+
+      <div class="guide-content">
+        <section class="guide-section">
+          <p class="guide-section__label">Interview Mode</p>
+          <h3>연습 모드 vs 실전 모드</h3>
+          <div class="guide-mode-grid">
+            <div class="guide-mode-card">
+              <div class="guide-mode-card__head guide-mode-card__head--practice">
+                <strong>연습 모드</strong>
+                <span>Practice Mode</span>
+              </div>
+              <dl>
+                <div><dt>질문 제공</dt><dd>텍스트 + 음성</dd></div>
+                <div><dt>다시 듣기</dt><dd>가능</dd></div>
+                <div><dt>질문 수</dt><dd>1~10개 선택</dd></div>
+                <div><dt>시간 제한</dt><dd>없음</dd></div>
+              </dl>
+            </div>
+            <div class="guide-mode-card">
+              <div class="guide-mode-card__head guide-mode-card__head--real">
+                <strong>실전 모드</strong>
+                <span>Real Mode</span>
+              </div>
+              <dl>
+                <div><dt>질문 제공</dt><dd>음성만 제공</dd></div>
+                <div><dt>다시 듣기</dt><dd>불가</dd></div>
+                <div><dt>진행 시간</dt><dd>7분 카운트다운</dd></div>
+                <div><dt>마이크</dt><dd>질문 후 5초 자동</dd></div>
+              </dl>
+            </div>
+          </div>
+        </section>
+
+        <section class="guide-section">
+          <p class="guide-section__label">Interview Flow</p>
+          <h3>인터뷰 진행 순서</h3>
+          <div class="guide-flow-grid">
+            <div><span>STEP 01</span><h4>모드 선택</h4><p>연습 모드 또는 실전 모드를 선택합니다.</p></div>
+            <div><span>STEP 02</span><h4>I-20 PDF 업로드</h4><p>PDF 형식의 I-20 서류를 업로드합니다.</p></div>
+            <div><span>STEP 03</span><h4>질문 수신</h4><p>AI 면접관이 개인화된 질문을 생성하고 음성으로 재생합니다.</p></div>
+            <div><span>STEP 04</span><h4>음성 답변</h4><p>마이크를 켜고 영어로 답변합니다.</p></div>
+            <div><span>STEP 05</span><h4>반복 진행</h4><p>설정한 질문 수 또는 실전 제한 시간까지 반복합니다.</p></div>
+            <div><span>STEP 06</span><h4>결과 확인</h4><p>종합 피드백을 확인하고 PDF로 저장할 수 있습니다.</p></div>
+          </div>
+        </section>
+
+        <section class="guide-section">
+          <p class="guide-section__label">Evaluation Criteria</p>
+          <h3>AI 평가 기준 3가지</h3>
+          <div class="guide-data-grid guide-data-grid--three">
+            <div><h4>정보 일치성</h4><p>업로드한 I-20 정보와 답변 내용이 일치하는지 분석합니다.</p></div>
+            <div><h4>언어 문법</h4><p>음성 답변을 텍스트로 변환한 뒤 문법적 정확도를 확인합니다.</p></div>
+            <div><h4>언어 구사 능력</h4><p>속도, 리듬, 억양, 유창성 등 전반적인 영어 답변 품질을 평가합니다.</p></div>
+          </div>
+        </section>
+
+        <section class="guide-section">
+          <p class="guide-section__label">Notes</p>
+          <h3>유의사항</h3>
+          <div class="guide-note">
+            <strong>중요</strong>
+            <p>본 서비스는 연습 목적의 시뮬레이션입니다. 실제 비자 합격 여부와는 무관하며, 결과는 학습 및 준비 참고용으로 활용해 주세요.</p>
+          </div>
+        </section>
+      </div>
+    </article>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/guide.js' %}"></script>
+{% endblock %}

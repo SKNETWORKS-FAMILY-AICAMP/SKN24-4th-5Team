@@ -327,12 +327,18 @@ async def interview_session_create(request):
             return JsonResponse({'error': "JSON 형식 오류"}, status=400)
         audio_file = None
 
+    max_q = data.get("max_q", 2)
+    if max_q in (None, ""):
+        max_q = None
+    else:
+        max_q = int(max_q)
+
     payload = {
         "mode": data.get("mode", "practice"),
-        "max_q": int(data.get("max_q", 2)),
+        "max_q": max_q,
         "profile_context": data.get("profile_context", ""),
         "history": data.get("history", []),
-        "is_over": False,
+        "is_over": bool(data.get("is_over", False)),
         "user_answer": data.get("user_answer") or None,
         "current_question": data.get("current_question") or None,
     }
@@ -484,4 +490,3 @@ def original_interview_session_create(request):
         stream_generator(),
         content_type = "text/event-stream"
     )
- 

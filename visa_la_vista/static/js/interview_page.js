@@ -28,6 +28,13 @@
     let uploadedFile = null;
     let uploadCompleted = false;
     let realTimerId = null;
+    let realMicDelayId = null;
+    let realMicCountdownId = null;
+    let currentQuestionAudio = null;
+    let isRealFinishing = false;
+    let isAnswerSubmitting = false;
+    let isRealEvaluationRequesting = false;
+    let hasRealEvaluation = false;
     let remainingSeconds = 7 * 60;
     let lastSessionData = null;
     let recorderState = null;
@@ -90,17 +97,27 @@
 
     function resetInterview() {
         window.clearInterval(realTimerId);
+        window.clearTimeout(realMicDelayId);
+        window.clearInterval(realMicCountdownId);
+        stopQuestionAudio();
+        stopRecordingTracks();
         realTimerId = null;
+        realMicDelayId = null;
+        realMicCountdownId = null;
         remainingSeconds = 7 * 60;
         realTimer.textContent = "07 : 00";
         clearChat("practice");
         clearChat("real");
         lastSessionData = null;
-        document.querySelectorAll(".audio-bar").forEach((bar) => bar.classList.remove("is-recording"));
-        micButtons.forEach((button) => {
-            button.classList.remove("is-recording");
-            button.setAttribute("aria-label", "답변 녹음 시작");
+        isRealFinishing = false;
+        isAnswerSubmitting = false;
+        isRealEvaluationRequesting = false;
+        hasRealEvaluation = false;
+        document.querySelectorAll(".interview-message--audio-question.is-playing").forEach((bubble) => {
+            bubble.classList.remove("is-playing");
         });
+        document.querySelectorAll(".audio-bar").forEach((bar) => bar.classList.remove("is-recording"));
+        micButtons.forEach(resetMicButton);
     }
 
     function formatTimer(totalSeconds) {
@@ -215,7 +232,42 @@
         printWindow.document.close();
     }
 
-    function createQuestionAudioButton(audioBase64) {
+    function createWaveformElement() {
+        const waveform = document.createElement("div");
+        waveform.className = "waveform";
+        waveform.setAttribute("aria-hidden", "true");
+
+        for (let index = 0; index < 54; index += 1) {
+            const bar = document.createElement("span");
+            const height = 5 + ((index * 11) % 28);
+            bar.style.setProperty("--wave-height", `${height}px`);
+            bar.style.setProperty("--wave-index", index);
+            waveform.appendChild(bar);
+        }
+
+        return waveform;
+    }
+
+    function getQuestionAudioMime(mime) {
+        return mime || "audio/mpeg";
+    }
+
+    function createAudioSource(audioBase64, mime = "audio/mpeg") {
+        if (!audioBase64) return null;
+        return new Audio(`data:${getQuestionAudioMime(mime)};base64,${audioBase64}`);
+    }
+
+    function stopQuestionAudio() {
+        document.querySelectorAll(".interview-message--audio-question.is-playing").forEach((bubble) => {
+            bubble.classList.remove("is-playing");
+        });
+        if (!currentQuestionAudio) return;
+        currentQuestionAudio.pause();
+        currentQuestionAudio.currentTime = 0;
+        currentQuestionAudio = null;
+    }
+
+    function createQuestionAudioButton(audioBase64, audioMime = "audio/mpeg") {
         const button = document.createElement("button");
         button.className = "question-audio-button";
         button.type = "button";
@@ -227,7 +279,7 @@
         `;
 
         if (audioBase64) {
-            const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
+            const audio = createAudioSource(audioBase64, audioMime);
             button.addEventListener("click", () => audio.play());
         } else {
             button.disabled = true;
@@ -236,7 +288,32 @@
         return button;
     }
 
-    function appendQuestion(mode, questionText, audioBase64 = "") {
+    function playQuestionAudio(audioBase64, audioMime = "audio/mpeg", waveformBubble = null, onEnded = null) {
+        const audio = createAudioSource(audioBase64, audioMime);
+        if (!audio) {
+            onEnded?.();
+            return Promise.resolve();
+        }
+
+        stopQuestionAudio();
+        currentQuestionAudio = audio;
+        waveformBubble?.classList.add("is-playing");
+        audio.addEventListener("ended", () => {
+            waveformBubble?.classList.remove("is-playing");
+            if (currentQuestionAudio === audio) {
+                currentQuestionAudio = null;
+            }
+            onEnded?.();
+        });
+        audio.addEventListener("pause", () => {
+            if (audio.currentTime < audio.duration) return;
+            waveformBubble?.classList.remove("is-playing");
+        });
+
+        return audio.play();
+    }
+
+    function appendQuestion(mode, questionText, audioBase64 = "", audioMime = "audio/mpeg") {
         if (!questionText) return;
 
         const row = document.createElement("div");
@@ -258,8 +335,38 @@
         content.textContent = questionText;
         bubble.append(content, createTimeElement());
 
-        row.append(avatar, bubble, createQuestionAudioButton(audioBase64));
+        row.append(avatar, bubble, createQuestionAudioButton(audioBase64, audioMime));
         insertBeforeAudioBar(mode, row);
+    }
+
+    function appendAudioQuestion(mode, audioBase64, audioMime = "audio/mpeg") {
+        const row = document.createElement("div");
+        row.className = "interview-message-row";
+        row.dataset.chatMessage = "question";
+
+        const avatar = document.createElement("div");
+        avatar.className = "interview-avatar";
+
+        const image = document.createElement("img");
+        image.alt = "";
+        image.src = interviewPage.dataset.assistantIcon;
+        avatar.appendChild(image);
+
+        const bubble = document.createElement("div");
+        bubble.className = "interview-message interview-message--question interview-message--audio-question";
+        bubble.append(createWaveformElement(), createTimeElement());
+
+        row.append(avatar, bubble);
+        insertBeforeAudioBar(mode, row);
+        return bubble;
+    }
+
+    function appendAudioAnswer(mode) {
+        const bubble = document.createElement("div");
+        bubble.className = "interview-message interview-message--answer interview-message--audio-answer";
+        bubble.dataset.chatMessage = "answer";
+        bubble.append(createWaveformElement(), createTimeElement());
+        insertBeforeAudioBar(mode, bubble);
     }
 
     function appendAnswer(mode, answerText) {
@@ -494,7 +601,12 @@
             if (data.success) {
                 clearChat("practice");
                 lastSessionData = data.data; // save for mic round
-                appendQuestion("practice", data.data.question, data.data.question_audio_base64);
+                appendQuestion(
+                    "practice",
+                    data.data.question,
+                    data.data.question_audio_base64,
+                    data.data.question_audio_mime,
+                );
                 // alert("Interview Started!");
             }
         } catch (error) {
@@ -507,12 +619,50 @@
 
     realStartBtn.addEventListener("click", () => {
         realStartBtn.disabled = true;
-        createInterviewSession({ mode: "real" })
+        isRealFinishing = false;
+        isAnswerSubmitting = false;
+        isRealEvaluationRequesting = false;
+        hasRealEvaluation = false;
+        window.clearTimeout(realMicDelayId);
+        window.clearInterval(realMicCountdownId);
+        window.clearInterval(realTimerId);
+        stopQuestionAudio();
+        micButtons.forEach(resetMicButton);
+        // remainingSeconds = 7 * 60;
+        remainingSeconds = 3 * 60;
+        realTimer.textContent = formatTimer(remainingSeconds);
+
+        const requestBody = {
+            mode: "real",
+            max_q: null,
+            profile_context: profile_context,
+            history: [],
+            is_over: false,
+            user_answer: "",
+            current_question: "",
+        };
+
+        createInterviewSession(requestBody)
             .then((data) => {
                 clearChat("real");
-                if (data.success && data.data)
-                    appendQuestion("real", data.data.question, data.data.question_audio_base64);
-                if (data.question) appendQuestion("real", data.question.text);
+                if (data.success && data.data) {
+                    lastSessionData = data.data;
+                    const questionBubble = appendAudioQuestion(
+                        "real",
+                        data.data.question_audio_base64,
+                        data.data.question_audio_mime,
+                    );
+                    playQuestionAudio(
+                        data.data.question_audio_base64,
+                        data.data.question_audio_mime,
+                        questionBubble,
+                        () => startRealMicCountdown(document.querySelector("#real-audio-bar [data-mic-button]")),
+                    ).catch((error) => {
+                        console.error("Question audio playback failed:", error);
+                        questionBubble?.classList.remove("is-playing");
+                        startRealMicCountdown(document.querySelector("#real-audio-bar [data-mic-button]"));
+                    });
+                }
                 window.clearInterval(realTimerId);
                 realTimerId = window.setInterval(() => {
                     remainingSeconds -= 1;
@@ -520,6 +670,8 @@
                     if (remainingSeconds <= 0) {
                         window.clearInterval(realTimerId);
                         realTimerId = null;
+                        realTimer.textContent = "00 : 00";
+                        finishRealInterview();
                     }
                 }, 1000);
             })
@@ -539,11 +691,27 @@
         });
     });
 
+    window.addEventListener("pagehide", resetInterview);
+    window.addEventListener("beforeunload", resetInterview);
+
     // ─── Recording ────────────────────────────────────────────────────────────
 
     micButtons.forEach((button) => {
+        button.dataset.defaultHtml = button.innerHTML;
         button.addEventListener("click", async () => {
             const audioBar = button.closest(".audio-bar");
+            window.clearTimeout(realMicDelayId);
+            window.clearInterval(realMicCountdownId);
+            button.classList.remove("is-countdown");
+            if (!button.classList.contains("is-recording")) {
+                button.innerHTML = button.dataset.defaultHtml;
+            }
+            const wasRecording = button.classList.contains("is-recording");
+            if (isRealFinishing && !wasRecording) {
+                resetMicButton(button);
+                return;
+            }
+
             const isRecording = button.classList.toggle("is-recording");
             audioBar.classList.toggle("is-recording", isRecording);
             button.setAttribute("aria-label", isRecording ? "Stop Recording" : "Start Recording");
@@ -554,12 +722,74 @@
                 } catch (err) {
                     console.error("Mic access denied:", err);
                     button.classList.remove("is-recording");
+                    audioBar.classList.remove("is-recording");
+                    button.setAttribute("aria-label", "Start Recording");
                 }
             } else {
-                await stopAndSend();
+                await stopAndSend(getModeFromAudioBar(audioBar));
             }
         });
     });
+
+    function getModeFromAudioBar(audioBar) {
+        return audioBar?.id === "real-audio-bar" ? "real" : "practice";
+    }
+
+    function resetMicButton(button) {
+        if (!button) return;
+        button.classList.remove("is-recording", "is-countdown");
+        button.setAttribute("aria-label", "답변 녹음 시작");
+        if (button.dataset.defaultHtml) {
+            button.innerHTML = button.dataset.defaultHtml;
+        }
+    }
+
+    function startRealMicCountdown(button) {
+        if (!button || isRealFinishing) return;
+
+        let remaining = 5;
+        window.clearTimeout(realMicDelayId);
+        window.clearInterval(realMicCountdownId);
+        button.classList.add("is-countdown");
+        button.classList.remove("is-recording");
+        button.textContent = remaining;
+        button.setAttribute("aria-label", `${remaining}초 후 녹음 시작`);
+
+        realMicCountdownId = window.setInterval(() => {
+            remaining -= 1;
+            if (remaining <= 0) {
+                window.clearInterval(realMicCountdownId);
+                realMicCountdownId = null;
+                button.classList.remove("is-countdown");
+                button.innerHTML = button.dataset.defaultHtml;
+                startRecordingFromButton(button);
+                return;
+            }
+
+            button.textContent = remaining;
+            button.setAttribute("aria-label", `${remaining}초 후 녹음 시작`);
+        }, 1000);
+    }
+
+    async function startRecordingFromButton(button) {
+        if (!button || recorderState || isRealFinishing) return;
+
+        const audioBar = button.closest(".audio-bar");
+        button.classList.remove("is-countdown");
+        button.innerHTML = button.dataset.defaultHtml;
+        button.classList.add("is-recording");
+        audioBar.classList.add("is-recording");
+        button.setAttribute("aria-label", "Stop Recording");
+
+        try {
+            await startRecording();
+        } catch (err) {
+            console.error("Mic access denied:", err);
+            button.classList.remove("is-recording");
+            audioBar.classList.remove("is-recording");
+            button.setAttribute("aria-label", "Start Recording");
+        }
+    }
 
     async function startRecording() {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -578,7 +808,77 @@
         recorderState = { stream, audioContext, processorNode, sourceNode, chunks, sampleRate };
     }
 
-    async function stopAndSend() {
+    function stopRecordingTracks() {
+        if (!recorderState) return;
+
+        const { processorNode, sourceNode, audioContext, stream } = recorderState;
+        try {
+            processorNode.disconnect();
+            sourceNode.disconnect();
+        } catch (error) {
+            console.warn("Recording nodes already disconnected:", error);
+        }
+        if (audioContext.state !== "closed") {
+            audioContext.close();
+        }
+        stream.getTracks().forEach((track) => track.stop());
+        recorderState = null;
+    }
+
+    async function finishRealInterview() {
+        if (isRealFinishing) return;
+        isRealFinishing = true;
+        window.clearTimeout(realMicDelayId);
+        window.clearInterval(realMicCountdownId);
+        stopQuestionAudio();
+
+        const realMicButton = document.querySelector("#real-audio-bar [data-mic-button]");
+        if (isAnswerSubmitting || isRealEvaluationRequesting || hasRealEvaluation) {
+            resetMicButton(realMicButton);
+            return;
+        }
+
+        if (recorderState) {
+            await stopAndSend("real", true);
+            resetMicButton(realMicButton);
+            return;
+        }
+
+        resetMicButton(realMicButton);
+        await requestRealEvaluation();
+    }
+
+    async function requestRealEvaluation() {
+        if (isRealEvaluationRequesting || hasRealEvaluation) return;
+        isRealEvaluationRequesting = true;
+
+        try {
+            const data = await createInterviewSession({
+                mode: "real",
+                max_q: null,
+                profile_context: profile_context,
+                history: lastSessionData ? lastSessionData.history : [],
+                current_question: lastSessionData ? lastSessionData.question : "",
+                is_over: true,
+                user_answer: null,
+            });
+
+            if (data.success) {
+                lastSessionData = data.data;
+                if (data.data.evaluation && !hasRealEvaluation) {
+                    hasRealEvaluation = true;
+                    appendEvaluation("real", data.data.evaluation);
+                }
+            }
+        } catch (error) {
+            console.error("Real interview evaluation failed:", error);
+            alert("실전 모드 평가를 불러오지 못했습니다.");
+        } finally {
+            isRealEvaluationRequesting = false;
+        }
+    }
+
+    async function stopAndSend(mode = "practice", isOver = false) {
         // ← inside the IIFE, has access to everything
         if (!recorderState) return;
 
@@ -586,6 +886,7 @@
 
         const blob = encodeWav(chunks, sampleRate);
         const file = new File([blob], "answer.wav", { type: "audio/wav" });
+        const shouldShowRealAnswerWave = mode === "real";
 
         processorNode.disconnect();
         sourceNode.disconnect();
@@ -593,13 +894,14 @@
         stream.getTracks().forEach((track) => track.stop());
 
         try {
+            isAnswerSubmitting = true;
             const requestBody = {
-                mode: "practice",
-                max_q: parseInt(practiceQuestionCount.value) || 3,
+                mode,
+                max_q: mode === "real" ? null : parseInt(practiceQuestionCount.value) || 3,
                 profile_context: profile_context,
                 history: lastSessionData ? lastSessionData.history : [],
                 current_question: lastSessionData ? lastSessionData.question : "",
-                is_over: false,
+                is_over: isOver,
                 user_answer: null,
             };
 
@@ -610,21 +912,57 @@
             console.log("stopAndSend result:", data);
 
             if (data.success) {
+                if (mode === "real" && hasRealEvaluation) {
+                    return;
+                }
+
                 lastSessionData = data.data; // save for next round
-                if (data.data.answer_text) {
-                    appendAnswer("practice", data.data.answer_text);
+                const micButton = document.querySelector(`#${mode}-audio-bar [data-mic-button]`);
+                resetMicButton(micButton);
+                if (shouldShowRealAnswerWave) {
+                    appendAudioAnswer(mode);
+                } else if (data.data.answer_text) {
+                    appendAnswer(mode, data.data.answer_text);
                 }
-                if (data.data.question) {
-                    appendQuestion("practice", data.data.question, data.data.question_audio_base64);
+                if (data.data.question && mode === "practice") {
+                    appendQuestion(
+                        mode,
+                        data.data.question,
+                        data.data.question_audio_base64,
+                        data.data.question_audio_mime,
+                    );
                 }
-                if (data.data.evaluation) {
-                    appendEvaluation("practice", data.data.evaluation);
+                if (data.data.question && mode === "real" && !isOver && !data.data.is_over && !isRealFinishing && !hasRealEvaluation) {
+                    const questionBubble = appendAudioQuestion(
+                        mode,
+                        data.data.question_audio_base64,
+                        data.data.question_audio_mime,
+                    );
+                    playQuestionAudio(
+                        data.data.question_audio_base64,
+                        data.data.question_audio_mime,
+                        questionBubble,
+                        () => startRealMicCountdown(document.querySelector("#real-audio-bar [data-mic-button]")),
+                    ).catch((error) => {
+                        console.error("Question audio playback failed:", error);
+                        questionBubble?.classList.remove("is-playing");
+                        startRealMicCountdown(document.querySelector("#real-audio-bar [data-mic-button]"));
+                    });
+                }
+                if (data.data.evaluation && !(mode === "real" && hasRealEvaluation)) {
+                    if (mode === "real") {
+                        hasRealEvaluation = true;
+                    }
+                    appendEvaluation(mode, data.data.evaluation);
+                } else if (mode === "real" && isRealFinishing && !hasRealEvaluation) {
+                    await requestRealEvaluation();
                 }
             }
         } catch (error) {
             console.error("Upload Error:", error);
             alert("Failed to send recording.");
         } finally {
+            isAnswerSubmitting = false;
             recorderState = null;
         }
     }

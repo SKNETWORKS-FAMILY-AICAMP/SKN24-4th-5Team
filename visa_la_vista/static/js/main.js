@@ -229,8 +229,35 @@
             verificationExpiresAt = 0;
         }
 
+        function getDisplayedTimerExpiresAt() {
+            const timerText = options.timer.textContent.trim();
+            const match = timerText.match(/^(\d{1,2}):(\d{2})$/);
+
+            if (!match || options.timer.classList.contains("is-expired")) {
+                return 0;
+            }
+
+            const remainingSeconds = Number(match[1]) * 60 + Number(match[2]);
+            return remainingSeconds > 0 ? Date.now() + remainingSeconds * 1000 : 0;
+        }
+
+        function getActiveExpiresAt() {
+            if (verificationExpiresAt > Date.now()) {
+                return verificationExpiresAt;
+            }
+
+            return getDisplayedTimerExpiresAt();
+        }
+
         function startVerificationTimer() {
-            let remainingSeconds = 5 * 60;
+            let remainingSeconds = Math.max(0, Math.ceil((verificationExpiresAt - Date.now()) / 1000));
+
+            if (remainingSeconds <= 0) {
+                options.timer.textContent = "만료";
+                options.timer.classList.add("is-expired");
+                expireVerification();
+                return;
+            }
 
             window.clearInterval(verificationTimerInterval);
             options.timer.textContent = formatVerificationTime(remainingSeconds);
@@ -257,6 +284,8 @@
                 if (!canSend) return;
             }
 
+            const activeExpiresAtBeforeSend = getActiveExpiresAt();
+
             const formData = new FormData();
             formData.append("email", options.emailInput.value.trim());
             formData.append("purpose", options.purpose);
@@ -280,11 +309,19 @@
                     return;
                 }
 
+                const hasActiveVerification = activeExpiresAtBeforeSend > Date.now();
+
                 isVerificationSent = true;
                 isVerificationChecked = false;
-                verificationExpiresAt = Date.now() + 5 * 60 * 1000;
-                startResendCooldown(button);
+
+                verificationExpiresAt = hasActiveVerification
+                    ? activeExpiresAtBeforeSend
+                    : data.expires_at
+                        ? Number(data.expires_at) * 1000
+                        : Date.now() + 5 * 60 * 1000;
+
                 startVerificationTimer();
+                startResendCooldown(button);
                 setFeedback(options.feedback, data.message || "인증번호를 이메일로 발송했습니다.", "success");
             } catch (error) {
                 setFeedback(options.feedback, "인증메일 발송 중 오류가 발생했습니다.");
