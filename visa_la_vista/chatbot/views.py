@@ -119,7 +119,6 @@ async def chat_message_create(request):
     if not content:
         return JsonResponse({'error': '메시지를 입력해주세요.'}, status=400)
 
-    # ✅ Use async version instead of request.user
     user = await request.auser()
 
     if conversation_id:
@@ -130,11 +129,11 @@ async def chat_message_create(request):
     if conversation is None:
         conversation = await AdmissionChatConversation.objects.acreate(
             title=content[:40],
-            user=user if user.is_authenticated else None,  # ✅ use local `user`
+            user=user if user.is_authenticated else None,  
             group_label='오늘',
         )
 
-    user_id = str(user.id) if user.is_authenticated else "anonymous"  # ✅
+    user_id = str(user.id) if user.is_authenticated else "anonymous"  
     chat_id = str(conversation.id)
     conv_title = conversation.title
     conv_group = conversation.group_label
@@ -311,8 +310,8 @@ FASTAPI_SECRET_KEY = os.getenv("FASTAPI_SECRET_KEY")
 
 import base64
 
-@require_POST
 @csrf_exempt
+@require_POST
 async def interview_session_create(request):
     if request.content_type and "multipart" in request.content_type:
         payload_raw = request.POST.get("payload", "{}")
@@ -448,8 +447,8 @@ async def before_multipart_audio_interview_session_create(request):
     )
 
 
+@csrf_exempt
 @require_POST
-# @csrf_exempt
 def original_interview_session_create(request):
     if request.method != "POST":
         return JsonResponse({"error": "POST만 허용"}, status=405)
