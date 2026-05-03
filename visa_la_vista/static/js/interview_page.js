@@ -1,6 +1,6 @@
 (function () {
     "use strict";
-    var profile_context = ""
+    var profile_context = "";
 
     const interviewPage = document.getElementById("interview-page");
     const pageData = JSON.parse(document.getElementById("interview-page-data").textContent);
@@ -15,9 +15,8 @@
     const practiceStartBtn = document.getElementById("practice-start-btn");
     const realStartBtn = document.getElementById("real-start-btn");
     const realTimer = document.getElementById("real-timer");
-    const realQuestionLine = document.getElementById("real-question-line");
-    const practiceAnswerText = document.getElementById("practice-answer-text");
-    const realAnswerAudio = document.getElementById("real-answer-audio");
+    const practiceChat = document.getElementById("practice-chat");
+    const realChat = document.getElementById("real-chat");
     const modeButtons = document.querySelectorAll("[data-mode-button]");
     const modeDescriptionCards = document.querySelectorAll("[data-mode-description]");
     const endButtons = document.querySelectorAll("[data-end-interview]");
@@ -68,7 +67,7 @@
         setMode(mode);
         showPanel("sidebar", mode);
         showPanel("stage", mode);
-        renderQuestion(mode);
+        clearChat(mode);
     }
 
     function openUploadModal(mode) {
@@ -94,9 +93,9 @@
         realTimerId = null;
         remainingSeconds = 7 * 60;
         realTimer.textContent = "07 : 00";
-        realQuestionLine.textContent = "";
-        practiceAnswerText.classList.add("hidden");
-        realAnswerAudio.classList.add("hidden");
+        clearChat("practice");
+        clearChat("real");
+        lastSessionData = null;
         document.querySelectorAll(".audio-bar").forEach((bar) => bar.classList.remove("is-recording"));
         micButtons.forEach((button) => {
             button.classList.remove("is-recording");
@@ -115,16 +114,199 @@
         return cookie ? decodeURIComponent(cookie.split("=")[1]) : "";
     }
 
-    function renderQuestion(mode) {
-        const [question] = interviewQuestions[mode] || [];
-        if (!question) return;
-        if (mode === "practice") {
-            document.getElementById("practice-question-text").textContent = question.text;
-            practiceAnswerText.querySelector("span").textContent = question.text;
+    function getChat(mode) {
+        return mode === "real" ? realChat : practiceChat;
+    }
+
+    function getAudioBar(mode) {
+        return document.getElementById(`${mode}-audio-bar`);
+    }
+
+    function getCurrentTimeLabel() {
+        return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function insertBeforeAudioBar(mode, element) {
+        const chat = getChat(mode);
+        const audioBar = getAudioBar(mode);
+        if (!chat) return;
+        chat.insertBefore(element, audioBar || null);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    function clearChat(mode) {
+        const chat = getChat(mode);
+        if (!chat) return;
+        chat.querySelectorAll("[data-chat-message]").forEach((message) => message.remove());
+    }
+
+    function createTimeElement() {
+        const time = document.createElement("span");
+        time.className = "interview-message__time";
+        time.textContent = getCurrentTimeLabel();
+        return time;
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function htmlWithLineBreaks(value) {
+        return escapeHtml(value).replace(/\r?\n/g, "<br>");
+    }
+
+    function downloadEvaluationAsPdf(evaluationText) {
+        const printWindow = window.open("", "_blank", "width=900,height=700");
+        if (!printWindow) {
+            alert("팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.");
+            return;
         }
-        if (mode === "real") {
-            realQuestionLine.textContent = question.text;
+
+        printWindow.document.write(`
+            <!doctype html>
+            <html lang="ko">
+                <head>
+                    <meta charset="utf-8">
+                    <title>Visa Interview Evaluation</title>
+                    <style>
+                        @page { size: A4; margin: 18mm; }
+                        * { box-sizing: border-box; }
+                        body {
+                            margin: 0;
+                            color: #141827;
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif;
+                            line-height: 1.65;
+                        }
+                        h1 {
+                            margin: 0 0 8px;
+                            color: #24308f;
+                            font-size: 24px;
+                        }
+                        .meta {
+                            margin-bottom: 24px;
+                            color: #697083;
+                            font-size: 12px;
+                        }
+                        .content {
+                            padding-top: 18px;
+                            border-top: 3px solid #24308f;
+                            white-space: normal;
+                            font-size: 14px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Visa Interview Evaluation</h1>
+                    <div class="meta">${escapeHtml(new Date().toLocaleString())}</div>
+                    <div class="content">${htmlWithLineBreaks(evaluationText)}</div>
+                    <script>
+                        window.addEventListener("load", () => {
+                            window.print();
+                        });
+                    <\/script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+
+    function createQuestionAudioButton(audioBase64) {
+        const button = document.createElement("button");
+        button.className = "question-audio-button";
+        button.type = "button";
+        button.setAttribute("aria-label", "질문 음성 듣기");
+        button.innerHTML = `
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M8 5v14l11-7z" />
+            </svg>
+        `;
+
+        if (audioBase64) {
+            const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
+            button.addEventListener("click", () => audio.play());
+        } else {
+            button.disabled = true;
         }
+
+        return button;
+    }
+
+    function appendQuestion(mode, questionText, audioBase64 = "") {
+        if (!questionText) return;
+
+        const row = document.createElement("div");
+        row.className = "interview-message-row";
+        row.dataset.chatMessage = "question";
+
+        const avatar = document.createElement("div");
+        avatar.className = "interview-avatar";
+
+        const image = document.createElement("img");
+        image.alt = "";
+        image.src = mode === "real" ? interviewPage.dataset.assistantIcon : interviewPage.dataset.interviewIcon;
+        avatar.appendChild(image);
+
+        const bubble = document.createElement("div");
+        bubble.className = "interview-message interview-message--question";
+
+        const content = document.createElement("span");
+        content.textContent = questionText;
+        bubble.append(content, createTimeElement());
+
+        row.append(avatar, bubble, createQuestionAudioButton(audioBase64));
+        insertBeforeAudioBar(mode, row);
+    }
+
+    function appendAnswer(mode, answerText) {
+        if (!answerText) return;
+
+        const bubble = document.createElement("div");
+        bubble.className = "interview-message interview-message--answer";
+        bubble.dataset.chatMessage = "answer";
+
+        const content = document.createElement("span");
+        content.textContent = answerText;
+        bubble.append(content, createTimeElement());
+
+        insertBeforeAudioBar(mode, bubble);
+    }
+
+    function appendEvaluation(mode, evaluationText) {
+        if (!evaluationText) return;
+
+        const row = document.createElement("div");
+        row.className = "interview-message-row";
+        row.dataset.chatMessage = "evaluation";
+
+        const avatar = document.createElement("div");
+        avatar.className = "interview-avatar";
+
+        const image = document.createElement("img");
+        image.alt = "";
+        image.src = interviewPage.dataset.interviewIcon;
+        avatar.appendChild(image);
+
+        const bubble = document.createElement("div");
+        bubble.className = "interview-message interview-message--question interview-message--evaluation";
+
+        const content = document.createElement("span");
+        content.innerHTML = htmlWithLineBreaks(evaluationText);
+
+        const downloadButton = document.createElement("button");
+        downloadButton.className = "evaluation-download-button";
+        downloadButton.type = "button";
+        downloadButton.textContent = "PDF 다운로드";
+        downloadButton.addEventListener("click", () => downloadEvaluationAsPdf(evaluationText));
+
+        bubble.append(content, downloadButton, createTimeElement());
+
+        row.append(avatar, bubble);
+        insertBeforeAudioBar(mode, row);
     }
 
     // ─── API ──────────────────────────────────────────────────────────────────
@@ -145,7 +327,6 @@
             console.log("audio file type:", audioFile.type);
             console.log("FormData payload field:", body.get("payload"));
             console.log("FormData audio_file field:", body.get("audio_file"));
-
         } else {
             // Plain JSON: no audio
             body = JSON.stringify(requestBody);
@@ -178,7 +359,6 @@
             console.error("Failed to parse JSON:", fullResponse);
             return { error: "Invalid JSON", raw: fullResponse };
         }
-
     }
 
     // ─── File validation ──────────────────────────────────────────────────────
@@ -268,12 +448,12 @@
         }
         const formData = new FormData();
         formData.append("pdf_file", uploadedFile);
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrftoken = document.querySelector("[name=csrfmiddlewaretoken]").value;
         try {
             const response = await fetch("/service/extract-pdf/", {
                 method: "POST",
                 body: formData,
-                headers: { "X-CSRFToken": csrftoken }
+                headers: { "X-CSRFToken": csrftoken },
             });
             const data = await response.json();
             if (data.status === "success") {
@@ -306,18 +486,16 @@
                 history: [],
                 is_over: false,
                 user_answer: "",
-                current_question: '',
+                current_question: "",
             };
-            const data = await createInterviewSession(myData);  // no audio
+            const data = await createInterviewSession(myData); // no audio
             console.log("practiceStartBtn data:", data);
 
             if (data.success) {
-                lastSessionData = data.data;  // save for mic round
-                const targetElement = document.getElementById("practice-question-text");
-                if (targetElement) {
-                    targetElement.textContent = data.data.question;
-                    alert("Interview Started!");
-                }
+                clearChat("practice");
+                lastSessionData = data.data; // save for mic round
+                appendQuestion("practice", data.data.question, data.data.question_audio_base64);
+                // alert("Interview Started!");
             }
         } catch (error) {
             console.error("Fetch/Stream Error:", error);
@@ -331,9 +509,10 @@
         realStartBtn.disabled = true;
         createInterviewSession({ mode: "real" })
             .then((data) => {
-                if (data.question) {
-                    realQuestionLine.textContent = data.question.text;
-                }
+                clearChat("real");
+                if (data.success && data.data)
+                    appendQuestion("real", data.data.question, data.data.question_audio_base64);
+                if (data.question) appendQuestion("real", data.question.text);
                 window.clearInterval(realTimerId);
                 realTimerId = window.setInterval(() => {
                     remainingSeconds -= 1;
@@ -378,8 +557,6 @@
                 }
             } else {
                 await stopAndSend();
-                practiceAnswerText.classList.remove("hidden");
-                realAnswerAudio.classList.remove("hidden");
             }
         });
     });
@@ -401,7 +578,8 @@
         recorderState = { stream, audioContext, processorNode, sourceNode, chunks, sampleRate };
     }
 
-    async function stopAndSend() {       // ← inside the IIFE, has access to everything
+    async function stopAndSend() {
+        // ← inside the IIFE, has access to everything
         if (!recorderState) return;
 
         const { chunks, sampleRate, processorNode, sourceNode, audioContext, stream } = recorderState;
@@ -412,7 +590,7 @@
         processorNode.disconnect();
         sourceNode.disconnect();
         audioContext.close();
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
 
         try {
             const requestBody = {
@@ -428,23 +606,19 @@
             console.log("stopAndSend payload:", JSON.stringify(requestBody));
             console.log("Audio file size:", file.size, "bytes");
 
-            const data = await createInterviewSession(requestBody, file);  // ← pass file
+            const data = await createInterviewSession(requestBody, file); // ← pass file
             console.log("stopAndSend result:", data);
 
             if (data.success) {
-                lastSessionData = data.data;  // save for next round
-                // const targetElement = document.getElementById("practice-question-text");
-                // if (targetElement) {
-                //     targetElement.textContent = data.data.question;
-                // }
-                const questionEl = document.getElementById("practice-question-text");
-                if (questionEl) {
-                    questionEl.textContent = data.data.question;
-                }
-
+                lastSessionData = data.data; // save for next round
                 if (data.data.answer_text) {
-                    practiceAnswerText.querySelector("span").textContent = data.data.answer_text;
-                    practiceAnswerText.classList.remove("hidden");
+                    appendAnswer("practice", data.data.answer_text);
+                }
+                if (data.data.question) {
+                    appendQuestion("practice", data.data.question, data.data.question_audio_base64);
+                }
+                if (data.data.evaluation) {
+                    appendEvaluation("practice", data.data.evaluation);
                 }
             }
         } catch (error) {
@@ -471,7 +645,8 @@
         let inputOffset = 0;
         for (let i = 0; i < length; i += 1) {
             const nextOffset = Math.round((i + 1) * ratio);
-            let sum = 0, count = 0;
+            let sum = 0,
+                count = 0;
             for (let j = inputOffset; j < nextOffset && j < buffer.length; j += 1) {
                 sum += buffer[j];
                 count += 1;
@@ -526,5 +701,4 @@
     setMode("practice");
     makeWaveforms();
     openUploadModal("practice");
-
 })();

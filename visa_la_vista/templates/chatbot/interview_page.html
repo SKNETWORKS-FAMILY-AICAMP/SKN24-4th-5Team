@@ -9,7 +9,9 @@
 
 {% block content %}
 
-<div id="interview-page" data-assistant-icon="{% static 'images/icon.png' %}">
+<div id="interview-page"
+    data-assistant-icon="{% static 'images/icon.png' %}"
+    data-interview-icon="{% static 'images/interview.png' %}">
 
     <input type="hidden" name="user_answer" value="">
     <input id="audio-file" type="file" name="audio_file" accept="audio/*" hidden>
@@ -76,30 +78,7 @@
                 </div>
             </div>
             <div class="mode-panel" data-stage-panel="practice">
-                <div class="interview-chat">
-                    <div class="interview-message-row">
-                        <div class="interview-avatar">
-                            <img src="{% static 'images/interview.png' %}" alt="">
-                        </div>
-                        <!-- todo:delete -->
-                        <!-- THIS IS THE FIRST CONVERSATION  -->
-                        <div class="interview-message interview-message--question">
-                            <span id="practice-question-text"></span>
-                            <span class="interview-message__time"></span>
-                        </div>
-                        <!-- Hello! I'm here to help you. What would you like to talk about today? -->
-                        <button class="question-audio-button" type="button" aria-label="질문 음성 듣기">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M8 5v14l11-7z" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="interview-message interview-message--answer hidden" id="practice-answer-text">
-                        <span></span>
-                        <span class="interview-message__time"></span>
-                    </div>
-
+                <div class="interview-chat" id="practice-chat">
                     <div class="audio-bar" id="practice-audio-bar">
                         <div class="waveform" aria-hidden="true"></div>
                         <button class="mic-button" type="button" data-mic-button aria-label="답변 녹음 시작">
@@ -115,22 +94,7 @@
             </div>
 
             <div class="mode-panel" data-stage-panel="real">
-                <div class="interview-chat interview-chat--real">
-                    <div class="interview-message-row">
-                        <div class="interview-avatar">
-                            <img src="{% static 'images/icon.png' %}" alt="">
-                        </div>
-                        <div class="interview-message interview-message--question">
-                            <span id="real-question-line"></span>
-                            <span class="interview-message__time">11:29 AM</span>
-                        </div>
-                    </div>
-
-                    <div class="interview-message interview-message--audio hidden" id="real-answer-audio">
-                        <div class="waveform" aria-hidden="true"></div>
-                        <span class="interview-message__time">11:29 AM</span>
-                    </div>
-
+                <div class="interview-chat interview-chat--real" id="real-chat">
                     <div class="audio-bar" id="real-audio-bar">
                         <div class="waveform" aria-hidden="true"></div>
                         <button class="mic-button" type="button" data-mic-button aria-label="답변 녹음 시작">
