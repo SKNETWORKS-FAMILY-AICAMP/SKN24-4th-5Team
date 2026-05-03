@@ -543,7 +543,6 @@
 
     micButtons.forEach((button) => {
         button.addEventListener("click", async () => {
-            alert("click");
             const audioBar = button.closest(".audio-bar");
             const isRecording = button.classList.toggle("is-recording");
             audioBar.classList.toggle("is-recording", isRecording);
@@ -563,6 +562,10 @@
     });
 
     async function startRecording() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("Your browser does not support audio recording in this environment (Check if you are using HTTPS)");
+            throw new Error("MediaDevices API not available");
+        }
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const audioContext = new AudioContext();
         const sampleRate = audioContext.sampleRate;
