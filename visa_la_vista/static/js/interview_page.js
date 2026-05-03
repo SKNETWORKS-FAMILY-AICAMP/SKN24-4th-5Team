@@ -30,11 +30,14 @@
     let uploadCompleted = false;
     let realTimerId = null;
     let remainingSeconds = 7 * 60;
+    let lastSessionData = null;
+    let recorderState = null;
+
+    // ─── UI helpers ───────────────────────────────────────────────────────────
 
     function makeWaveforms() {
         document.querySelectorAll(".waveform").forEach((waveform) => {
             waveform.innerHTML = "";
-
             for (let index = 0; index < 54; index += 1) {
                 const bar = document.createElement("span");
                 const height = 5 + ((index * 11) % 28);
@@ -51,7 +54,6 @@
         });
     }
 
-    // 선택 중인 모드와 같은 설명 카드만 강조합니다.
     function setMode(mode) {
         selectedMode = mode;
         modeButtons.forEach((button) => {
@@ -62,7 +64,6 @@
         });
     }
 
-    // 시작 후에는 선택 화면을 숨기고 해당 모드 진행 화면으로 전환합니다.
     function showInterviewMode(mode) {
         setMode(mode);
         showPanel("sidebar", mode);
@@ -76,13 +77,11 @@
         uploadModalClose.focus();
     }
 
-    // 파일 업로드 전에는 모달을 먼저 열고, 업로드 후에는 바로 모드로 진입합니다.
     function selectInterviewMode(mode) {
         if (!uploadCompleted) {
             openUploadModal(mode);
             return;
         }
-
         showInterviewMode(mode);
     }
 
@@ -108,84 +107,97 @@
     function formatTimer(totalSeconds) {
         const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
         const seconds = String(totalSeconds % 60).padStart(2, "0");
-
         return `${minutes} : ${seconds}`;
     }
 
     function getCsrfToken() {
         const cookie = document.cookie.split("; ").find((row) => row.startsWith("csrftoken="));
-
         return cookie ? decodeURIComponent(cookie.split("=")[1]) : "";
     }
 
     function renderQuestion(mode) {
         const [question] = interviewQuestions[mode] || [];
         if (!question) return;
-
         if (mode === "practice") {
             document.getElementById("practice-question-text").textContent = question.text;
             practiceAnswerText.querySelector("span").textContent = question.text;
         }
-
         if (mode === "real") {
             realQuestionLine.textContent = question.text;
         }
     }
-    // FASTAPI: send msg  
-    // class VisaTurnRequest(BaseModel):
-    // mode: InterviewMode
-    // max_q: int | None = Field(default=None, ge=1)
-    // profile_context: str = ""
-    // history: list[HistoryItem] = Field(default_factory=list)
-    // is_over: bool = False
-    // user_answer: str | None = None
-    // current_question: str | None = None
-    // audio_base64: str | None = None
-    // audio_mime: str | None = "audio/mpeg"
-    // include_tts: bool = False
-    function createInterviewSession(mode) {
-        return fetch(interviewSessionUrl, {
+
+    // ─── API ──────────────────────────────────────────────────────────────────
+
+    async function createInterviewSession(requestBody, audioFile = null) {
+        let body;
+        let headers = {};
+
+        if (audioFile) {
+            // Multipart: send payload as form field + audio file
+            body = new FormData();
+            body.append("payload", JSON.stringify(requestBody));
+            body.append("audio_file", audioFile, audioFile.name);
+            // DO NOT set Content-Type — browser sets it with boundary automatically
+
+            console.log("audio file name:", audioFile.name);
+            console.log("audio file size:", audioFile.size, "bytes");
+            console.log("audio file type:", audioFile.type);
+            console.log("FormData payload field:", body.get("payload"));
+            console.log("FormData audio_file field:", body.get("audio_file"));
+
+        } else {
+            // Plain JSON: no audio
+            body = JSON.stringify(requestBody);
+            headers["Content-Type"] = "application/json";
+        }
+
+        const response = await fetch("/service/interview_session_create/", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCsrfToken(),
-            },
-            body: JSON.stringify({
-                mode: mode,
-                uploaded_file_name: uploadedFile ? uploadedFile.name : "",
-                max_q: mode === "practice" ? practiceQuestionCount.value : null,
-                profile_context: "",
-                history: [],
-                is_over: false,
-                user_answer: "",
-                current_question: "",
-                // audio_base64: str | None = None
-                // audio_mime: str | None = "audio/mpeg"
-                // include_tts: bool = False
-            }),
-        }).then((response) => (response.ok ? response.json() : Promise.reject(response)));
+            headers,
+            body,
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullResponse = "";
+
+        console.log("--- Stream Started ---");
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            console.log("Received chunk:", chunk);
+            fullResponse += chunk;
+        }
+        console.log("--- Stream Finished ---");
+
+        try {
+            return JSON.parse(fullResponse);
+        } catch (e) {
+            console.error("Failed to parse JSON:", fullResponse);
+            return { error: "Invalid JSON", raw: fullResponse };
+        }
     }
+
+    // ─── File validation ──────────────────────────────────────────────────────
 
     function validateFile(file) {
         if (!file) {
-            alert("PDF파일을 업로드해주세요 herehrehrehrehrehrhehehre");
+            alert("PDF파일을 업로드해주세요");
             return false;
         }
-
         if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
             alert("파일형식이 올바르지 않습니다. PDF형식 의 파일인지 확인하세요.");
             return false;
         }
-
         if (file.size > 5 * 1024 * 1024) {
             alert("파일 크기는 5MB 이하여야 합니다.");
             return false;
         }
-
         return true;
     }
 
-    // ---------- PDF 업로드 함수
     function setUploadedFile(file) {
         if (!validateFile(file)) {
             fileInput.value = "";
@@ -193,10 +205,11 @@
             fileNameDisplay.textContent = "";
             return;
         }
-
         uploadedFile = file;
         fileNameDisplay.textContent = file.name;
     }
+
+    // ─── Event listeners ──────────────────────────────────────────────────────
 
     modeButtons.forEach((button) => {
         button.addEventListener("mouseenter", () => setMode(button.dataset.modeButton));
@@ -212,15 +225,10 @@
 
     uploadModalClose.addEventListener("click", closeUploadModal);
     uploadModal.addEventListener("click", (event) => {
-        if (event.target === uploadModal) {
-            closeUploadModal();
-        }
+        if (event.target === uploadModal) closeUploadModal();
     });
-
     document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && !uploadModal.classList.contains("hidden")) {
-            closeUploadModal();
-        }
+        if (event.key === "Escape" && !uploadModal.classList.contains("hidden")) closeUploadModal();
     });
 
     fileInput.addEventListener("change", () => {
@@ -248,46 +256,27 @@
             alert("PDF파일을 하나만 올려주세요");
             return;
         }
-
         setUploadedFile(files[0]);
     });
 
-
-
-    // NEW FUNCTION 
     uploadForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-
         if (!uploadedFile) {
             alert("PDF파일을 업로드해주세요!");
             return;
         }
-
-        // 1. Prepare data for the server
         const formData = new FormData();
         formData.append("pdf_file", uploadedFile);
-
-        // 2. Get CSRF Token (Required for Django POST requests)
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
         try {
-            // console.log("Processing PDF... Please wait.");  
-
-            // 3. Send to Django
-            const response = await fetch("/service/extract-pdf/", { // Change to your actual URL
+            const response = await fetch("/service/extract-pdf/", {
                 method: "POST",
                 body: formData,
                 headers: { "X-CSRFToken": csrftoken }
             });
-
             const data = await response.json();
-
             if (data.status === "success") {
-                // console.log("PDF file uploaded and text extracted!"); 
-                // console.log("Extracted Content:", data.text);
-                profile_context = data.text
-
-                // 4. Continue your UI flow
+                profile_context = data.text;
                 uploadCompleted = true;
                 closeUploadModal();
                 setMode("practice");
@@ -302,60 +291,52 @@
         }
     });
 
-
-
-    // ORIGINAL 
-    // uploadForm.addEventListener("submit", (event) => {
-    //     event.preventDefault();
-
-    //     if (!uploadedFile) {
-    //         alert("PDF파일을 업로드해주세요 WHYWHYWHWYHWYWHYW");
-    //         return;
-    //     }
-    //     uploadCompleted = true;
-    //     alert("PDF file uploaded! _extract_text_flattened_pdf function here")
-    //     closeUploadModal();
-    //     setMode("practice");
-    //     showPanel("sidebar", "select");
-    //     showPanel("stage", "select");
-    // });
-
-    practiceStartBtn.addEventListener("click", () => {
-        // console.log("profile_context:" + profile_context);
+    practiceStartBtn.addEventListener("click", async () => {
         if (!practiceQuestionCount.value) {
             alert("질문 개수를 선택해주세요");
             return;
         }
-
         practiceStartBtn.disabled = true;
-        createInterviewSession("practice")
-            .then((data) => {
-                if (data.question) {
-                    alert("practiceStartBtn!!") //todo:fastapi request
-                    document.getElementById("practice-question-text").textContent = data.question.text;
+        try {
+            const myData = {
+                mode: "practice",
+                max_q: practiceQuestionCount.value || 3,
+                profile_context: profile_context,
+                history: [],
+                is_over: false,
+                user_answer: "",
+                current_question: '',
+            };
+            const data = await createInterviewSession(myData);  // no audio
+            console.log("practiceStartBtn data:", data);
+
+            if (data.success) {
+                lastSessionData = data.data;  // save for mic round
+                const targetElement = document.getElementById("practice-question-text");
+                if (targetElement) {
+                    targetElement.textContent = data.data.question;
+                    alert("Interview Started!");
                 }
-            })
-            .catch(() => {
-                practiceStartBtn.disabled = false;
-                alert("연습 모드를 시작하지 못했습니다.");
-            });
+            }
+        } catch (error) {
+            console.error("Fetch/Stream Error:", error);
+            alert("연습 모드를 시작하지 못했습니다.");
+        } finally {
+            practiceStartBtn.disabled = false;
+        }
     });
 
     realStartBtn.addEventListener("click", () => {
         realStartBtn.disabled = true;
-
-        createInterviewSession("real")
+        createInterviewSession({ mode: "real" })
             .then((data) => {
                 if (data.question) {
                     realQuestionLine.textContent = data.question.text;
-                    alert("createInterviewSession!")
                 }
-
                 window.clearInterval(realTimerId);
                 realTimerId = window.setInterval(() => {
                     remainingSeconds -= 1;
                     realTimer.textContent = formatTimer(remainingSeconds);
-
                     if (remainingSeconds <= 0) {
                         window.clearInterval(realTimerId);
                         realTimerId = null;
@@ -378,21 +359,162 @@
         });
     });
 
+    // ─── Recording ────────────────────────────────────────────────────────────
+
     micButtons.forEach((button) => {
-        button.addEventListener("click", () => {
+        button.addEventListener("click", async () => {
             const audioBar = button.closest(".audio-bar");
             const isRecording = button.classList.toggle("is-recording");
             audioBar.classList.toggle("is-recording", isRecording);
-            button.setAttribute("aria-label", isRecording ? "녹음 중단" : "답변 녹음 시작");
+            button.setAttribute("aria-label", isRecording ? "Stop Recording" : "Start Recording");
 
-            if (!isRecording) {
+            if (isRecording) {
+                try {
+                    await startRecording();
+                } catch (err) {
+                    console.error("Mic access denied:", err);
+                    button.classList.remove("is-recording");
+                }
+            } else {
+                await stopAndSend();
                 practiceAnswerText.classList.remove("hidden");
                 realAnswerAudio.classList.remove("hidden");
             }
         });
     });
 
+    async function startRecording() {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioContext = new AudioContext();
+        const sampleRate = audioContext.sampleRate;
+        const sourceNode = audioContext.createMediaStreamSource(stream);
+        const processorNode = audioContext.createScriptProcessor(4096, 1, 1);
+        let chunks = [];
+
+        processorNode.onaudioprocess = (event) => {
+            chunks.push(new Float32Array(event.inputBuffer.getChannelData(0)));
+        };
+
+        sourceNode.connect(processorNode);
+        processorNode.connect(audioContext.destination);
+        recorderState = { stream, audioContext, processorNode, sourceNode, chunks, sampleRate };
+    }
+
+    async function stopAndSend() {       // ← inside the IIFE, has access to everything
+        if (!recorderState) return;
+
+        const { chunks, sampleRate, processorNode, sourceNode, audioContext, stream } = recorderState;
+
+        const blob = encodeWav(chunks, sampleRate);
+        const file = new File([blob], "answer.wav", { type: "audio/wav" });
+
+        processorNode.disconnect();
+        sourceNode.disconnect();
+        audioContext.close();
+        stream.getTracks().forEach(track => track.stop());
+
+        try {
+            const requestBody = {
+                mode: "practice",
+                max_q: parseInt(practiceQuestionCount.value) || 3,
+                profile_context: profile_context,
+                history: lastSessionData ? lastSessionData.history : [],
+                current_question: lastSessionData ? lastSessionData.question : "",
+                is_over: false,
+                user_answer: null,
+            };
+
+            console.log("stopAndSend payload:", JSON.stringify(requestBody));
+            console.log("Audio file size:", file.size, "bytes");
+
+            const data = await createInterviewSession(requestBody, file);  // ← pass file
+            console.log("stopAndSend result:", data);
+
+            if (data.success) {
+                lastSessionData = data.data;  // save for next round
+                const targetElement = document.getElementById("practice-question-text");
+                if (targetElement) {
+                    targetElement.textContent = data.data.question;
+                }
+            }
+        } catch (error) {
+            console.error("Upload Error:", error);
+            alert("Failed to send recording.");
+        } finally {
+            recorderState = null;
+        }
+    }
+
+    // ─── WAV encoding ─────────────────────────────────────────────────────────
+
+    function writeString(view, offset, string) {
+        for (let i = 0; i < string.length; i += 1) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    }
+
+    function downsampleBuffer(buffer, inputSampleRate, outputSampleRate) {
+        if (outputSampleRate === inputSampleRate) return buffer;
+        const ratio = inputSampleRate / outputSampleRate;
+        const length = Math.round(buffer.length / ratio);
+        const result = new Float32Array(length);
+        let inputOffset = 0;
+        for (let i = 0; i < length; i += 1) {
+            const nextOffset = Math.round((i + 1) * ratio);
+            let sum = 0, count = 0;
+            for (let j = inputOffset; j < nextOffset && j < buffer.length; j += 1) {
+                sum += buffer[j];
+                count += 1;
+            }
+            result[i] = count ? sum / count : 0;
+            inputOffset = nextOffset;
+        }
+        return result;
+    }
+
+    function encodeWav(buffers, inputSampleRate) {
+        const samples = mergeBuffers(buffers);
+        const outputSampleRate = 16000;
+        const resampled = downsampleBuffer(samples, inputSampleRate, outputSampleRate);
+        const buffer = new ArrayBuffer(44 + resampled.length * 2);
+        const view = new DataView(buffer);
+        writeString(view, 0, "RIFF");
+        view.setUint32(4, 36 + resampled.length * 2, true);
+        writeString(view, 8, "WAVE");
+        writeString(view, 12, "fmt ");
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, outputSampleRate, true);
+        view.setUint32(28, outputSampleRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        writeString(view, 36, "data");
+        view.setUint32(40, resampled.length * 2, true);
+        let offset = 44;
+        for (let i = 0; i < resampled.length; i += 1) {
+            const sample = Math.max(-1, Math.min(1, resampled[i]));
+            view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+            offset += 2;
+        }
+        return new Blob([view], { type: "audio/wav" });
+    }
+
+    function mergeBuffers(buffers) {
+        const length = buffers.reduce((total, buffer) => total + buffer.length, 0);
+        const result = new Float32Array(length);
+        let offset = 0;
+        buffers.forEach((buffer) => {
+            result.set(buffer, offset);
+            offset += buffer.length;
+        });
+        return result;
+    }
+
+    // ─── Init ─────────────────────────────────────────────────────────────────
+
     setMode("practice");
     makeWaveforms();
     openUploadModal("practice");
+
 })();

@@ -52,3 +52,4 @@ pillow==12.2.0
 pytesseract==0.3.13
 pdf2image==1.17.0
 langchain_community==0.4.1
+pypdf==6.10.2

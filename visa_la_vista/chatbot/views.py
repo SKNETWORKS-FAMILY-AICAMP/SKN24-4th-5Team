@@ -7,6 +7,9 @@ from django.shortcuts import render
 from django.http import JsonResponse, StreamingHttpResponse
 from django.views.decorators.http import require_POST
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
 
 from .models import (
     AdmissionChatConversation,
@@ -18,8 +21,9 @@ from .models import (
 
 load_dotenv()
 
-FASTAPI_URL = "https://1r3qiu3k9lvtup-8000.proxy.runpod.net"
-FASTAPI_SECRET_KEY = os.getenv("FASTAPI_SECRET_KEY", "")
+# S1 Runpod FASTAPI
+FASTAPI_URL_S1 = "https://1r3qiu3k9lvtup-8000.proxy.runpod.net"
+FASTAPI_SECRET_KEY_S1 = os.getenv("FASTAPI_SECRET_KEY", "")
 
 def _chat_queryset_for_user(request):
     queryset = AdmissionChatConversation.objects.prefetch_related('messages').filter(
@@ -149,9 +153,9 @@ async def chat_message_create(request):
         async with httpx.AsyncClient(timeout=300) as client:
             async with client.stream(
                 "POST",
-                f"{FASTAPI_URL}/admission/chat/v1",
+                f"{FASTAPI_URL_S1}/admission/chat/v1",
                 json={"user_id": user_id, "chat_id": chat_id, "question": content},
-                headers={"x-api-key": FASTAPI_SECRET_KEY},
+                headers={"x-api-key": FASTAPI_SECRET_KEY_S1},
             ) as resp:
                 async for line in resp.aiter_lines():
                     if not line:
@@ -294,14 +298,158 @@ def extract_pdf_view(request):
 
 
 
+# S2 Runpod FASTAPI
+import httpx
+import json
+from django.http import StreamingHttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
-# RUNPOD_URL = "https://ruqmxrcp2wvlx8-8000.proxy.runpod.net"
-# API_SECRET_KEY = os.getenv("RUNPOT_API_KEY", "7759e342f8e33b061b680498d30d42b6873a21d1cacd060c0a4258d26eaa94ab")
-# FASTAPI_SECRET_KEY
+# FASTAPI_URL_S2 =  "http://127.0.0.1:8001" 
+FASTAPI_URL_S2 = "https://zbn0fwzba1ylfl-8000.proxy.runpod.net"
+API_SECRET_KEY_S2 = "66b15280d3145859f2e9e42bb8b41db32c85317ceaefba8144a33412cca50bbb"
+import base64
+
+@require_POST
+@csrf_exempt
+async def interview_session_create(request):
+    if request.content_type and "multipart" in request.content_type:
+        payload_raw = request.POST.get("payload", "{}")
+        try:
+            data = json.loads(payload_raw)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': "payload JSON 형식 오류"}, status=400)
+        audio_file = request.FILES.get("audio_file")
+    else:
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': "JSON 형식 오류"}, status=400)
+        audio_file = None
+
+    payload = {
+        "mode": data.get("mode", "practice"),
+        "max_q": int(data.get("max_q", 2)),
+        "profile_context": data.get("profile_context", ""),
+        "history": data.get("history", []),
+        "is_over": False,
+        "user_answer": data.get("user_answer") or None,
+        "current_question": data.get("current_question") or None,
+    }
+
+    # ✅ Check 1: did Django receive the audio file?
+    audio_bytes = None
+    audio_name = None
+    audio_content_type = None
+    if audio_file:
+        audio_bytes = audio_file.read()
+        audio_name = audio_file.name
+        audio_content_type = audio_file.content_type or "audio/wav"
+
+        # ✅ Check 2: print to Django console to confirm receipt
+        print(f"[audio received] name={audio_name}, size={len(audio_bytes)} bytes, type={audio_content_type}")
+    else:
+        print("[audio received] NO audio file — sending JSON only")
+
+    # ✅ Convert to base64 BEFORE the generator (bytes can't be read twice)
+    audio_base64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
+
+    if audio_base64:
+        # Add base64 audio into the JSON payload instead of sending as multipart
+        payload["audio_base64"] = audio_base64
+        payload["audio_mime"] = audio_content_type
+        print(f"[audio base64] length={len(audio_base64)} chars")
+
+    target_url = f"{FASTAPI_URL_S2.rstrip('/')}/visa/interview"
+
+    async def stream_generator():
+        async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
+            try:
+                # ✅ Always send JSON — audio is now inside payload as base64
+                async with client.stream(
+                    "POST", target_url,
+                    headers={"x-api-key": API_SECRET_KEY_S2},
+                    json=payload,   # audio_base64 + audio_mime are inside here
+                ) as response:
+                    print(f"[runpod] response status: {response.status_code}")
+
+                    if response.status_code != 200:
+                        error_body = await response.aread()
+                        print(f"[runpod] error body: {error_body.decode()}")
+                        yield f"data: Error {response.status_code}: {error_body.decode()}\n\n"
+                        return
+
+                    async for line in response.aiter_lines():
+                        if line:
+                            yield line + "\n"
+
+            except httpx.ConnectTimeout:
+                yield "data: Connection timed out.\n\n"
+            except Exception as e:
+                print(f"[stream error] {e}")
+                yield f"data: Server error: {str(e)}\n\n"
+
+    return StreamingHttpResponse(stream_generator(), content_type="text/event-stream")
+
+
+
+async def before_multipart_audio_interview_session_create(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': "JSON 형식 오류"}, status=400)
+
+    payload = {
+        "mode": data.get("mode", "practice"),
+        "max_q": int(data.get("max_q", 2)),
+        "profile_context": data.get("profile_context", ""),
+        "history": data.get("history", []),
+        "is_over": False,
+        "user_answer": data.get("user_answer") or None,
+        "current_question": data.get("current_question") or None,
+    }
+
+    # Match EXACTLY what the test version does:
+    # data={"payload": json_string}, no audio_file
+    target_url = f"{FASTAPI_URL_S2.rstrip('/')}/visa/interview"  # No trailing slash
+
+    async def stream_generator():
+        async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
+            try:
+                async with client.stream(
+                    "POST",
+                    target_url,
+                    headers={"x-api-key": API_SECRET_KEY_S2},
+                    # This replicates requests' data= param (form field, not file)
+                    # data={"payload": json.dumps(payload, ensure_ascii=False)},
+                     json=payload,  
+                ) as response:
+                    print(f"FastAPI response status: {response.status_code}")
+
+                    if response.status_code != 200:
+                        error_body = await response.aread()
+                        yield f"data: Error {response.status_code}: {error_body.decode()}\n\n"
+                        return
+
+                    async for line in response.aiter_lines():
+                        if line:
+                            yield line + "\n"
+
+            except httpx.ConnectTimeout:
+                yield "data: Connection timed out.\n\n"
+            except Exception as e:
+                print(f"Stream error: {e}")
+                yield f"data: Server error: {str(e)}\n\n"
+
+    return StreamingHttpResponse(
+        stream_generator(),
+        content_type="text/event-stream"
+    )
+
 
 @require_POST
 # @csrf_exempt
-def interview_session_create(request):
+def original_interview_session_create(request):
     if request.method != "POST":
         return JsonResponse({"error": "POST만 허용"}, status=405)
 
@@ -328,6 +476,7 @@ def interview_session_create(request):
             ) as response:
                 for line in response.iter_lines():
                     if line and line != "data: [Done]":
+                        print(f"Proxying line: {line}")
                         yield line + "\n"
             print(f"Response status: {response.status_code}")
 
@@ -335,97 +484,4 @@ def interview_session_create(request):
         stream_generator(),
         content_type = "text/event-stream"
     )
-    """
-    ### original return format
-    payload = json.loads(request.body or '{}')
-    mode = payload.get('mode')
-    if mode not in dict(VisaInterviewModeDescription.MODE_CHOICES):
-        return JsonResponse({'error': '올바른 인터뷰 모드를 선택해주세요.'}, status=400)
-    session = VisaInterviewSession.objects.create(
-        user=request.user if request.user.is_authenticated else None,
-        mode=mode,
-        uploaded_file_name=payload.get('uploaded_file_name', ''),
-        question_count=payload.get('question_count') or None,
-        status=VisaInterviewSession.STATUS_IN_PROGRESS,
-    )
-    first_question = (
-        VisaInterviewQuestion.objects
-        .filter(mode=mode, is_active=True)
-        .order_by('order', 'id')
-        .first()
-    )
-    return JsonResponse({
-        'session': {'id': session.id, 'mode': session.mode, 'status': session.status},
-        'question': {
-            'id': first_question.id,
-            'text': first_question.question_text,
-        } if first_question else None,
-    }, status=201)
-
-
-
-    # response data
-    # FastAPI가 장고에 돌려주는 실제 인터뷰 처리 결과
-    class VisaTurnData(BaseModel):
-        mode: InterviewMode
-        question: str | None = None
-        question_audio_base64: str | None = None
-        answer_text: str | None = None
-        history: list[HistoryItem]
-        is_over: bool
-        evaluation: str | None = None
-    """
-
-
-
-
-"""
-################################################################
-SCHEMA.PY
-################################################################
-
-from typing import Literal
-
-from pydantic import BaseModel, Field
-
-
-InterviewMode = Literal["practice", "real"]
-
-
-# 장고와 FastAPI가 주고받는 질문/답변 한 쌍의 기록
-class HistoryItem(BaseModel):
-    question: str
-    answer: str = ""
-    audio: dict | None = None
-
-
-# 장고가 한 턴마다 FastAPI로 보내는 인터뷰 요청 데이터
-class VisaTurnRequest(BaseModel):
-    mode: InterviewMode
-    max_q: int | None = Field(default=None, ge=1)
-    profile_context: str = ""
-    history: list[HistoryItem] = Field(default_factory=list)
-    is_over: bool = False
-    user_answer: str | None = None
-    current_question: str | None = None
-    audio_base64: str | None = None
-    audio_mime: str | None = "audio/mpeg"
-    include_tts: bool = False
-
-
-# FastAPI가 장고에 돌려주는 실제 인터뷰 처리 결과
-class VisaTurnData(BaseModel):
-    mode: InterviewMode
-    question: str | None = None
-    question_audio_base64: str | None = None
-    answer_text: str | None = None
-    history: list[HistoryItem]
-    is_over: bool
-    evaluation: str | None = None
-
-
-# 모든 visa 인터뷰 응답을 감싸는 공통 응답 포맷
-class VisaTurnResponse(BaseModel):
-    success: bool = True
-    data: VisaTurnData
-"""
+ 

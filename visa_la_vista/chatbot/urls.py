@@ -22,6 +22,7 @@ from django.conf.urls.static import static
 from . import views
 
 urlpatterns = [
+    path('interview_session_create/', views.interview_session_create, name='interview_session_create'),
     path('extract-pdf/', views.extract_pdf_view, name='extract-pdf'),
     path('chat', views.chat_list, name='chat'),
     path('interview', views.interview_page, name='interview'),
