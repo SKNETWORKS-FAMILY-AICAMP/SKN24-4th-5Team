@@ -104,7 +104,7 @@
 </p>
 
 <p>  
-출처 : <a href="https://www.naeil.com/news/read/556332?ref=naver">https://www.vietnam.vn/ko/ty-le-truot-visa-du-hoc-my-cao-nhat-10-nam</a>  
+출처 : <a href="https://www.vietnam.vn/ko/ty-le-truot-visa-du-hoc-my-cao-nhat-10-nam">https://www.vietnam.vn/ko/ty-le-truot-visa-du-hoc-my-cao-nhat-10-nam</a>  
 </p>
 
 ---
