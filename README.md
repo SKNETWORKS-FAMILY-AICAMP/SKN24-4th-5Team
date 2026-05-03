@@ -66,7 +66,7 @@
 	- 👉 **단순 정보 탐색을 넘어 ‘학위 취득과 비자 승인’이라는 구체적 목표를 가진 성인 유학생**을 핵심 타겟으로 설정함.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/2965af96-db4f-432d-8918-c7c0a3756076"/>
+  <img src="https://github.com/user-attachments/assets/2965af96-db4f-432d-8918-c7c0a3756076"  width="400"/>
 </p>
 
 
@@ -80,7 +80,7 @@ https://edumorning.com/articles/1029
     *   👉 **복잡해진 상황 속에서 사용자가 궁금한 점을 즉시 해소하고 검증된 입시 데이터에 24시간 접근할 수 있는 챗봇 서비스 필요**
       
 <p align="center">
-  <img src="[https://github.com/user-attachments/assets/2965af96-db4f-432d-8918-c7c0a3756076](https://cdn.topdigital.com.au/news/photo/202604/30560_50951_250.jpg)"/>
+  <img src="[https://github.com/user-attachments/assets/2965af96-db4f-432d-8918-c7c0a3756076](https://cdn.topdigital.com.au/news/photo/202604/30560_50951_250.jpg)"  width="400"/>
 </p>
 
 
@@ -94,7 +94,7 @@ https://www.topdigital.com.au/news/articleView.html?idxno=30560
 
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/00d4cda1-f71a-4f4b-b812-077d6bfb031c"/>
+  <img src="https://github.com/user-attachments/assets/00d4cda1-f71a-4f4b-b812-077d6bfb031c" width="400"/>
 </p>
 
 
