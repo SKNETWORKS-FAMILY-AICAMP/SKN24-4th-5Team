@@ -245,7 +245,7 @@
 ### 🔹 ChatMessage (FastAPI 추론용)
 
 - DB에 저장되지 않는 임시 메시지 구조
-- FastAPI에서 Claude API로 전달되어 응답 생성을 위한 컨텍스트로 사용됨
+- FastAPI에서 LLM 전달되어 응답 생성을 위한 컨텍스트로 사용됨
 
 ### 🔹 AdmissionChatConversation + AdmissionChatMessage (Django RDS 저장용)
 
