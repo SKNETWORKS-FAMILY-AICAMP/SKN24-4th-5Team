@@ -5,7 +5,7 @@
 
 **세부 주제**: LLM을 연동한 내외부 문서 기반 질의 응답 웹페이지 개발
 
-**일정**: 2020 ~ 
+**일정**: 2026.04.30 ~ 2026.05.04
 
 
 
@@ -30,29 +30,29 @@
 # **Contents**
 
 1.  [팀 소개](#1--팀-소개)
-2.  [프로젝트 개요](#2-️-프로젝트-개요)
-3.  [기술 스택](#3-️-기술-스택)
+2.  [프로젝트 개요](#2-프로젝트-개요)
+3.  [기술 스택](#3-기술-스택)
 4.  [시스템 구성도](#5-시스템-아키텍처)
-5.  [요구사항 명세서](#7-요구사항-명세서)
-6.  [화면설계서](#7-요구사항-명세서)
-7.  [WBS](#6-️-wbs)
+5.  [WBS](#6-️-wbs)
+6.  [요구사항 명세서](#7-요구사항-명세서)
+7.  [화면설계서](#7-요구사항-명세서)
 8.  [테스트 계획&결과 보고서](#10--테스트-계획-및-결과-보고서)
 9.  [수행결과](#12--수행결과)
-10.  [진행과정 중 프로그램 개선 노력](#11-진행과정-중-프로그램-개선-노력)
-11.  [한 줄 회고](#13--한-줄-회고)
+10.  [진행과정 중 프로그램 개선 노력](#11-서비스모델-성능-개선을-위한-노력)
+11.  [한 줄 회고](#13-한-줄-회고)
 </br>
 
 ---
 
-##  **2.  프로젝트 개요**
+##  **2. 프로젝트 개요**
 
 ##  **2.1 프로젝트 명 : `Visa La Vista`**
   
 >  **“Visa la Vista!”** : 스페인어 '인생이여 만세(Viva La Vida)'에서 착안하여, '성공적인 유학을 통해 펼쳐질 당신의 찬란한 앞날(Vista) 만세!'라는 의미함
-`비자 성공부터 글로벌 입시까지 아자아자!! ୧(⑅˃ᗜ˂⑅)୨ 응원합니다!`
+`비자 성공부터 글로벌 입시까지 아자아자!! 응원합니다!`
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/27df7eed-77cd-43d0-af65-c969b6b9d465" width="400"/>
+  <img src="https://github.com/user-attachments/assets/27df7eed-77cd-43d0-af65-c969b6b9d465" width="800"/>
 </p>
 
 
@@ -72,7 +72,7 @@
 	- 👉 **단순 정보 탐색을 넘어 ‘학위 취득과 비자 승인’이라는 구체적 목표를 가진 성인 유학생**을 핵심 타겟으로 설정함
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/2965af96-db4f-432d-8918-c7c0a3756076"  width="400"/>
+  <img src="https://github.com/user-attachments/assets/2965af96-db4f-432d-8918-c7c0a3756076"  width="800"/>
 </p>
 
 <p>  
@@ -85,11 +85,22 @@
 *   국내 대학(연세대 등)은 '통합자료실'을 통해 모든 입시 정보를 단일 PDF로 제공하는 반면, UIUC를 비롯한 해외 대학은 정보가 여러 웹페이지의 분리 및 500~7000 페이지 분량의 입시요강에 파편화되어 있음
     *   👉 이러한 분산된 구조는 유학원 등 특정 서비스 공급자에게 정보 권력이 독점되는 결과를 초래하며, 학생은 고가의 컨설팅 비용을 지불해야만 하는 구조적 비효율에 직면함
     *   👉 따라서 분산된 입시 데이터를 하나로 통합하고, 복잡한 준비 과정을 일괄적으로 관리해 줄 수 있는 통합 솔루션(챗봇)의 도입이 시급함
+|
 
-<img width='680' src="./assets/news1.png" />
-<img width='680' src="./assets/news1-1.png" />
 
-[출처: 데일리안](https://www.dailian.co.kr/news/view/1619827/%EC%B5%9C%EA%B7%BC-%EA%B0%95%ED%99%94%EB%90%98%EB%8A%94-%EB%AF%B8%EA%B5%AD%EB%B9%84%EC%9E%90-%EC%9D%B8%ED%84%B0%EB%B7%B0-%EC%A0%95%EC%B1%85%EA%B3%BC-2026)
+
+<table align="center">
+  <tr>
+    <td>
+      <img width='680' src="./image/2.2.png" />
+    </td>
+    <td>
+      <img width='680' src="./image/2.1.png" />
+    </td>
+  </tr>
+</table>
+
+[출처: 연세대학교 공식 홈페이지](https://www.yonsei.ac.kr/), [일리노이 대학교 공식 홈페이지](https://illinois.edu/)
 
 
 
@@ -110,10 +121,10 @@
 <table align="center">
   <tr>
     <td>
-      <img src=https://github.com/user-attachments/assets/d1e1f5ae-f94f-4f51-bf36-7cefe9b08000 width="400"/>
+      <img src=https://github.com/user-attachments/assets/d1e1f5ae-f94f-4f51-bf36-7cefe9b08000 width="500"/>
     </td>
     <td>
-      <img src=https://github.com/user-attachments/assets/00d4cda1-f71a-4f4b-b812-077d6bfb031c width="400"/>
+      <img src=https://github.com/user-attachments/assets/00d4cda1-f71a-4f4b-b812-077d6bfb031c width="450"/>
     </td>
   </tr>
 </table>
@@ -140,7 +151,7 @@
       <img src="https://cdn.topdigital.com.au/news/photo/202604/30560_50951_250.jpg" width="400"/>
     </td>
     <td>
-      <img src="https://github.com/user-attachments/assets/41d567b0-392f-4a59-929c-ea1451993e25" width="400"/>
+      <img src="https://github.com/user-attachments/assets/41d567b0-392f-4a59-929c-ea1451993e25" width="830"/>
     </td>
   </tr>
 </table>
@@ -190,7 +201,7 @@
     	- 고비용 구조 개선 : 특정 유학원에 종속된 고비용·폐쇄적 정보 구조를 탈피하고, 누구나 고도화된 기술 서비스를 저비용으로 누릴 수 있는 유학 준비의 대중화를 실현함
 
 
-## 3. 기술 스택 (Tech Stack)
+## 3. 기술 스택
 
 | 분류 | 기술 및 도구 |
 | :---: | :--- |
@@ -204,17 +215,64 @@
 
 ---
 
-##  4. 사용 모델 --> 수정
+##  4. 모델 선정
+### STT / TTS 모델 선택 근거
+
+### - STT (Speech-to-Text)
+
+| 항목 | Whisper | Google STT | Azure STT | DeepSpeech | **Vosk ✓** | Wav2Vec2 |
+|------|:-------:|:----------:|:---------:|:----------:|:----------:|:--------:|
+| 오프라인 동작 | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| 실시간 스트리밍 | ❌ | ✅ | ✅ | ❌ | ✅ | ❌ |
+| 무료/오픈소스 | ✅ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| 경량 (저사양) | ❌ | ✅ | ✅ | ❌ | ✅ | ❌ |
+| Python 연동 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| API 비용 | 없음 | 유료 | 유료 | 없음 | **없음** | 없음 |
+
+> **Vosk 선택 이유**: 오프라인 + 실시간 스트리밍을 동시에 지원하는 유일한 무료 모델.  
+> Whisper는 스트리밍 불가, Google/Azure는 유료라 제외.
+
+---
+
+### - TTS (Text-to-Speech)
+
+| 항목 | Piper | Google TTS | Azure TTS | Coqui TTS | **gTTS ✓** | ElevenLabs |
+|------|:-----:|:----------:|:---------:|:---------:|:----------:|:----------:|
+| 오프라인 동작 | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| 무료/오픈소스 | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ |
+| 설치 난이도 | 중간 | 쉬움 | 중간 | 어려움 | **쉬움** | 쉬움 |
+| 음성 자연스러움 | 높음 | 높음 | 매우높음 | 높음 | 보통 | 매우높음 |
+| Python 연동 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| API 비용 | 없음 | 유료 | 유료 | 없음 | **없음** | 유료 |
+
+> **gTTS 선택 이유**: pip 한 줄 설치, API 비용 없음, 자연스러움 영어 발음 (면접관 TTS 출력용)  
+> 면접 연습 특성상 음질보다 빠른 응답이 우선이라 고품질 유료 모델은 제외.
 
 
-##  5. 🧩시스템 아키텍처 ##  --> 수정
+##  5. 🧩시스템 아키텍처
+<img src="./image/시스템아키텍처.png" />
+
+## 5.1. ERD
+<img src="./image/ERD.png" />
+
+### 🔹 ChatMessage (FastAPI 추론용)
+
+* DB에 저장되지 않는 임시 메시지 구조
+* FastAPI에서 Claude API로 전달되어 응답 생성을 위한 컨텍스트로 사용됨
+
+### 🔹 AdmissionChatConversation + AdmissionChatMessage (Django RDS 저장용)
+
+* 실제 RDB(MySQL 등)에 저장되는 대화 데이터
+* 대화 기록 관리 및 채팅 UI(목록/말풍선) 렌더링에 사용됨
 
 
-
-##  6. 🖼️ WBS  --> 수정
+##  6. 🖼️ WBS
+<img src="./image/스크린샷 2026-05-04 093153.png" />
   
 
-##  7. 📝요구사항 명세서  --> 수정
+##  7. 📝요구사항 명세서
+<img src="./image/요구사항 명세서.png" />
+
 
   
 ##  10. 📻 테스트 계획 및 결과 보고서
