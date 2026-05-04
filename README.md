@@ -148,10 +148,10 @@
 <table align="center">
   <tr>
     <td>
-      <img src="./image/4_2.png" width="830"/>
+      <img src="./image/4_2.jpg" width="830"/>
     </td>
     <td>
-      <img src="./image/4.1.png" width="830"/>
+      <img src="./image/4.1.jpg" width="830"/>
     </td>
   </tr>
 </table>
