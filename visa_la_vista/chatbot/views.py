@@ -9,6 +9,7 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from asgiref.sync import sync_to_async
 
 
 from .models import (
@@ -313,57 +314,59 @@ import base64
 @csrf_exempt
 @require_POST
 async def interview_session_create(request):
-    if request.content_type and "multipart" in request.content_type:
-        payload_raw = request.POST.get("payload", "{}")
+    try:
+        if request.content_type and "multipart" in request.content_type:
+            payload_raw = await sync_to_async(lambda: request.POST.get("payload", "{}"))()
+            audio_file = await sync_to_async(lambda: request.FILES.get("audio_file"))()
+        else:
+            payload_raw = request.body.decode("utf-8") if request.body else "{}"
+            audio_file = None
+
         try:
             data = json.loads(payload_raw)
         except json.JSONDecodeError:
             return JsonResponse({'error': "payload JSON 형식 오류"}, status=400)
-        audio_file = request.FILES.get("audio_file")
-    else:
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': "JSON 형식 오류"}, status=400)
-        audio_file = None
 
-    max_q = data.get("max_q", 2)
-    if max_q in (None, ""):
-        max_q = None
-    else:
-        max_q = int(max_q)
+        max_q = data.get("max_q", 2)
+        if max_q in (None, ""):
+            max_q = None
+        else:
+            max_q = int(max_q)
 
-    payload = {
-        "mode": data.get("mode", "practice"),
-        "max_q": max_q,
-        "profile_context": data.get("profile_context", ""),
-        "history": data.get("history", []),
-        "is_over": bool(data.get("is_over", False)),
-        "user_answer": data.get("user_answer") or None,
-        "current_question": data.get("current_question") or None,
-    }
+        payload = {
+            "mode": data.get("mode", "practice"),
+            "max_q": max_q,
+            "profile_context": data.get("profile_context", ""),
+            "history": data.get("history", []),
+            "is_over": bool(data.get("is_over", False)),
+            "user_answer": data.get("user_answer") or None,
+            "current_question": data.get("current_question") or None,
+        }
 
-    audio_bytes = None
-    audio_name = None
-    audio_content_type = None
-    if audio_file:
-        audio_bytes = audio_file.read()
-        audio_name = audio_file.name
-        audio_content_type = audio_file.content_type or "audio/wav"
+        audio_bytes = None
+        audio_content_type = None
+        if audio_file:
+            audio_bytes = await sync_to_async(audio_file.read)()
+            audio_content_type = audio_file.content_type or "audio/wav"
 
-        print(f"[audio received] name={audio_name}, size={len(audio_bytes)} bytes, type={audio_content_type}")
-    else:
-        print("[audio received] NO audio file — sending JSON only")
+            print(f"[audio received] name={audio_file.name}, size={len(audio_bytes)} bytes, type={audio_content_type}")
+        else:
+            print("[audio received] NO audio file — sending JSON only")
 
-    audio_base64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
+        audio_base64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else None
 
-    if audio_base64:
-        # base64 audio in JSON payload 
-        payload["audio_base64"] = audio_base64
-        payload["audio_mime"] = audio_content_type
-        print(f"[audio base64] length={len(audio_base64)} chars")
+        if audio_base64:
+            payload["audio_base64"] = audio_base64
+            payload["audio_mime"] = audio_content_type
+            print(f"[audio base64] length={len(audio_base64)} chars")
 
-    target_url = f"{FASTAPI_URL.rstrip('/')}/visa/interview"
+        if not FASTAPI_URL:
+            return JsonResponse({'error': "FASTAPI_URL 환경변수가 설정되지 않았습니다."}, status=500)
+
+        target_url = f"{FASTAPI_URL.rstrip('/')}/visa/interview"
+    except Exception as e:
+        print(f"[interview request error] {e}")
+        return JsonResponse({'error': f"인터뷰 요청 처리 중 오류가 발생했습니다: {str(e)}"}, status=500)
 
     async def stream_generator():
         async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
@@ -377,8 +380,14 @@ async def interview_session_create(request):
 
                     if response.status_code != 200:
                         error_body = await response.aread()
-                        print(f"[runpod] error body: {error_body.decode()}")
-                        yield f"data: Error {response.status_code}: {error_body.decode()}\n\n"
+                        error_text = error_body.decode(errors="replace")
+                        print(f"[runpod] error body: {error_text}")
+                        error_payload = json.dumps({
+                            "success": False,
+                            "error": f"AI 서버 오류가 발생했습니다. ({response.status_code})",
+                            "detail": error_text,
+                        }, ensure_ascii=False)
+                        yield error_payload
                         return
 
                     async for line in response.aiter_lines():

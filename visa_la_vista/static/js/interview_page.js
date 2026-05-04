@@ -454,6 +454,16 @@
             body,
         });
 
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Interview API failed:", response.status, errorText);
+            return {
+                success: false,
+                error: `인터뷰 서버 오류가 발생했습니다. (${response.status})`,
+                raw: errorText,
+            };
+        }
+
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let fullResponse = "";
@@ -472,7 +482,7 @@
             return JSON.parse(fullResponse);
         } catch (e) {
             console.error("Failed to parse JSON:", fullResponse);
-            return { error: "Invalid JSON", raw: fullResponse };
+            return { success: false, error: "인터뷰 응답 형식이 올바르지 않습니다.", raw: fullResponse };
         }
     }
 
