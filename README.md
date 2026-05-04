@@ -70,7 +70,7 @@
     - 👉 **단순 정보 탐색을 넘어 ‘학위 취득과 비자 승인’이라는 구체적 목표를 가진 성인 유학생**을 핵심 타겟으로 설정함
 
 <p align="center">
-  <img src="./image/1.png"  width="800"/>
+  <img src="./image/1.png"  width="400"/>
 </p>
 
 <p>  
