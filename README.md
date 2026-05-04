@@ -52,7 +52,7 @@
 `비자 성공부터 글로벌 입시까지 아자아자!! 응원합니다!`
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/27df7eed-77cd-43d0-af65-c969b6b9d465" width="800"/>
+  <img src="./image/홈페이지 메인.png"  width="800"/>
 </p>
 
 
@@ -72,7 +72,7 @@
 	- 👉 **단순 정보 탐색을 넘어 ‘학위 취득과 비자 승인’이라는 구체적 목표를 가진 성인 유학생**을 핵심 타겟으로 설정함
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/2965af96-db4f-432d-8918-c7c0a3756076"  width="800"/>
+  <img src="./image/1.png"  width="800"/>
 </p>
 
 <p>  
@@ -121,10 +121,10 @@
 <table align="center">
   <tr>
     <td>
-      <img src=https://github.com/user-attachments/assets/d1e1f5ae-f94f-4f51-bf36-7cefe9b08000 width="500"/>
+      <img src="./image/3.1.png" width="500"/>
     </td>
     <td>
-      <img src=https://github.com/user-attachments/assets/00d4cda1-f71a-4f4b-b812-077d6bfb031c width="450"/>
+      <img src="./image/3.2.png" width="500"/>
     </td>
   </tr>
 </table>
@@ -148,10 +148,10 @@
 <table align="center">
   <tr>
     <td>
-      <img src="https://cdn.topdigital.com.au/news/photo/202604/30560_50951_250.jpg" width="400"/>
+      <img src="./image/4_2.png" width="830"/>
     </td>
     <td>
-      <img src="https://github.com/user-attachments/assets/41d567b0-392f-4a59-929c-ea1451993e25" width="830"/>
+      <img src="./image/4.1.png" width="830"/>
     </td>
   </tr>
 </table>
