@@ -9,7 +9,6 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from asgiref.sync import sync_to_async
 
 
 from .models import (
@@ -313,11 +312,11 @@ import base64
 
 @csrf_exempt
 @require_POST
-async def interview_session_create(request):
+def interview_session_create(request):
     try:
         if request.content_type and "multipart" in request.content_type:
-            payload_raw = await sync_to_async(lambda: request.POST.get("payload", "{}"))()
-            audio_file = await sync_to_async(lambda: request.FILES.get("audio_file"))()
+            payload_raw = request.POST.get("payload", "{}")
+            audio_file = request.FILES.get("audio_file")
         else:
             payload_raw = request.body.decode("utf-8") if request.body else "{}"
             audio_file = None
@@ -346,7 +345,7 @@ async def interview_session_create(request):
         audio_bytes = None
         audio_content_type = None
         if audio_file:
-            audio_bytes = await sync_to_async(audio_file.read)()
+            audio_bytes = audio_file.read()
             audio_content_type = audio_file.content_type or "audio/wav"
 
             print(f"[audio received] name={audio_file.name}, size={len(audio_bytes)} bytes, type={audio_content_type}")
@@ -368,10 +367,10 @@ async def interview_session_create(request):
         print(f"[interview request error] {e}")
         return JsonResponse({'error': f"인터뷰 요청 처리 중 오류가 발생했습니다: {str(e)}"}, status=500)
 
-    async def stream_generator():
-        async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
+    def stream_generator():
+        with httpx.Client(timeout=120.0, follow_redirects=True) as client:
             try:
-                async with client.stream(
+                with client.stream(
                     "POST", target_url,
                     headers={"x-api-key": FASTAPI_SECRET_KEY},
                     json=payload,   # audio_base64 + audio_mime are inside here
@@ -379,7 +378,7 @@ async def interview_session_create(request):
                     print(f"[runpod] response status: {response.status_code}")
 
                     if response.status_code != 200:
-                        error_body = await response.aread()
+                        error_body = response.read()
                         error_text = error_body.decode(errors="replace")
                         print(f"[runpod] error body: {error_text}")
                         error_payload = json.dumps({
@@ -390,7 +389,7 @@ async def interview_session_create(request):
                         yield error_payload
                         return
 
-                    async for line in response.aiter_lines():
+                    for line in response.iter_lines():
                         if line:
                             yield line + "\n"
 
